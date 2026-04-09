@@ -6,7 +6,6 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['teacher', 'admin'], required: true },
   name: String,
-  // For teachers — which classes they teach
   assignedClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
 }, { timestamps: true });
 

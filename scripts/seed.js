@@ -22,19 +22,19 @@ await User.insertMany([
     username: 'admin',
     password: await bcrypt.hash('admin123', 10),
     role: 'admin',
-    name: 'Principal Roy',
+    name: 'Miss Ruth',
   },
   {
     username: 'teacher1',
     password: await bcrypt.hash('teacher123', 10),
     role: 'teacher',
-    name: 'Mrs. Sharma',
+    name: 'Miss Esther',
   },
   {
     username: 'teacher2',
     password: await bcrypt.hash('teacher123', 10),
     role: 'teacher',
-    name: 'Mr. Verma',
+    name: 'Sir Joseph',
   },
 ]);
 
