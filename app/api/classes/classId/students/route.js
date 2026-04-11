@@ -5,15 +5,38 @@ import Student from '@/models/Student';
 export async function GET(req, { params }) {
   await connectDB();
 
-  // Find the class to get its name and section
-  const cls = await Class.findById(params.classId);
-  if (!cls) return Response.json({ error: 'Class not found' }, { status: 404 });
+  const classId = params.classId;
+  console.log('Looking for students in classId:', classId);
 
-  // Find students matching that class name and section
-  const students = await Student.find({
-    class: cls.name,
-    section: cls.section,
-  }).sort({ rollNo: 1 });
+  try {
+    const cls = await Class.findById(classId);
+    console.log('Class found:', cls);
 
-  return Response.json(students);
+    if (!cls) return Response.json({ error: 'Class not found' }, { status: 404 });
+
+    console.log('Querying students with class:', cls.name, 'section:', cls.section);
+
+    // Try exact match first (class name + section)
+    let students = await Student.find({
+      class: cls.name,
+      section: cls.section,
+    }).sort({ rollNo: 1 });
+
+    console.log('Exact match students found:', students.length);
+
+    // If nothing found, try matching just by class name (ignore section)
+    if (students.length === 0) {
+      console.log('No exact match, trying class name only...');
+      students = await Student.find({
+        class: cls.name,
+      }).sort({ rollNo: 1 });
+      console.log('Loose match students found:', students.length);
+    }
+
+    return Response.json(students);
+
+  } catch (err) {
+    console.log('Error:', err.message);
+    return Response.json({ error: err.message }, { status: 500 });
+  }
 }

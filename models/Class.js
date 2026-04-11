@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+// Delete cached model to avoid stale schema issues
+if (mongoose.models.Class) delete mongoose.models.Class;
+
 const ClassSchema = new mongoose.Schema({
   name: { type: String, required: true },
   section: { type: String, enum: ['A', 'B', 'C'], default: 'A' },
@@ -8,4 +11,4 @@ const ClassSchema = new mongoose.Schema({
   academicYear: { type: String, default: '2024-25' },
 }, { timestamps: true });
 
-export default mongoose.models.Class || mongoose.model('Class', ClassSchema);
+export default mongoose.model('Class', ClassSchema);

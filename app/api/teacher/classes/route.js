@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
+import Class from '@/models/Class'; // ← this line was missing
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 
