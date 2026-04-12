@@ -42,7 +42,7 @@ export default function TeacherDashboard() {
       {/* Welcome */}
       <div style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--charcoal)' }}>
-          Good morning, {session?.user?.name ?? 'Teacher'} 👋
+          Hello, {session?.user?.name ?? 'Teacher'} 👋
         </h2>
         <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
           Your assigned classes this year

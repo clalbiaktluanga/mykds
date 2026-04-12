@@ -515,10 +515,6 @@ export default function LandingPage() {
               height={45}
               style={{ objectFit: 'contain', height: 42, width: 'auto' }}
             />
-            <div>
-              <div className="footer-school-name">KIDS DEN SCHOOL</div>
-              <div className="footer-school-sub">Curiosity, Creativity and Confidence</div>
-            </div>
           </div>
           <p className="footer-copy">Copyright {new Date().getFullYear()} – Kids Den School</p>
         </div>

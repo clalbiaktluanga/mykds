@@ -32,10 +32,10 @@ export default function LoginPage() {
             display:'flex', alignItems:'center', justifyContent:'center',
             fontSize:24 }}>🎒</div>
           <h1 style={{ fontSize:'1.4rem', fontWeight:700, color:'var(--charcoal)' }}>
-            my.kidsdenschool
+            myKDS
           </h1>
           <p style={{ fontSize:'0.82rem', color:'var(--charcoal-light)', marginTop:4 }}>
-            Staff Portal
+            Login to continue. <br />Need help? <a href="https://link.kidsdenschool.in/u1T4boZT" target="_blank" style={{ color:'var(--sky)' }}>Contact support</a>
           </p>
         </div>
 
