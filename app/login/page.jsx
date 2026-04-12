@@ -2,83 +2,225 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Spinner from '@/components/Spinner';
 
 export default function LoginPage() {
   const [form, setForm] = useState({ username: '', password: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
+
     const res = await signIn('credentials', {
-      ...form, redirect: false,
+      username: form.username,
+      password: form.password,
+      redirect: false,
     });
-    if (res?.error) return setError('Invalid credentials');
-    // Redirect based on role (stored in session)
+
+    if (res?.error) {
+      setError('Invalid username or password');
+      setLoading(false);
+      return;
+    }
+
+    setSuccess(true);
     const session = await fetch('/api/auth/session').then(r => r.json());
-    router.push(session?.user?.role === 'admin' ? '/admin' : '/teacher');
+    const role = session?.user?.role;
+
+    setTimeout(() => {
+      if (role === 'admin') router.push('/admin');
+      else if (role === 'teacher') router.push('/teacher');
+      else { setError('Unknown role. Contact admin.'); setLoading(false); setSuccess(false); }
+    }, 600);
+  };
+
+  const inputStyle = {
+    width: '100%', padding: '0.7rem 1rem', borderRadius: 10,
+    border: '1.5px solid var(--sky-light)', fontFamily: 'Poppins',
+    fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.2s',
   };
 
   return (
-    <div style={{ minHeight:'100vh', display:'flex', alignItems:'center',
-      justifyContent:'center', background:'var(--bg)' }}>
-      <div style={{ background:'white', borderRadius:'var(--radius)',
-        padding:'2.5rem', width:'100%', maxWidth:'380px',
-        boxShadow:'var(--shadow)', border:'1.5px solid var(--sky-light)' }}>
-        
-        <div style={{ textAlign:'center', marginBottom:'2rem' }}>
-          <div style={{ width:52, height:52, borderRadius:14,
-            background:'var(--sky)', margin:'0 auto 1rem',
-            display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:24 }}>🎒</div>
-          <h1 style={{ fontSize:'1.4rem', fontWeight:700, color:'var(--charcoal)' }}>
-            myKDS
-          </h1>
-          <p style={{ fontSize:'0.82rem', color:'var(--charcoal-light)', marginTop:4 }}>
-            Login to continue. <br />Need help? <a href="https://link.kidsdenschool.in/u1T4boZT" target="_blank" style={{ color:'var(--sky)' }}>Contact support</a>
-          </p>
-        </div>
+    <>
+      <style>{`
+        @keyframes kds-login-in {
+          from { opacity: 0; transform: translateY(24px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes kds-logo-bounce {
+          0%, 100% { transform: translateY(0); }
+          40%       { transform: translateY(-6px); }
+        }
+        @keyframes kds-success-pop {
+          0%   { transform: scale(0.8); opacity: 0; }
+          60%  { transform: scale(1.15); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .login-card {
+          animation: kds-login-in 0.45s cubic-bezier(.22,1,.36,1) both;
+        }
+        .login-logo-wrap {
+          animation: kds-logo-bounce 1.8s ease-in-out infinite;
+        }
+        .kds-input:focus {
+          border-color: var(--sky, #87cefa) !important;
+          box-shadow: 0 0 0 3px rgba(135,206,250,0.15);
+        }
+        .kds-success-icon {
+          animation: kds-success-pop 0.4s cubic-bezier(.22,1,.36,1) both;
+        }
+      `}</style>
 
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom:'1rem' }}>
-            <label style={{ fontSize:'0.8rem', fontWeight:600,
-              color:'var(--charcoal)', display:'block', marginBottom:6 }}>
-              Username
-            </label>
-            <input
-              value={form.username}
-              onChange={e => setForm({...form, username: e.target.value})}
-              style={{ width:'100%', padding:'0.7rem 1rem', borderRadius:10,
-                border:'1.5px solid var(--sky-light)', fontFamily:'Poppins',
-                fontSize:'0.9rem', outline:'none' }}
-              placeholder="Enter username"
-            />
+      <div style={{
+        minHeight: '100vh', display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        background: 'var(--bg, #f7fbff)',
+        padding: '1rem',
+      }}>
+        <div className="login-card" style={{
+          background: 'white', borderRadius: 20,
+          padding: '2.5rem', width: '100%', maxWidth: 380,
+          boxShadow: '0 4px 40px rgba(135,206,250,0.2)',
+          border: '1.5px solid var(--sky-light)',
+        }}>
+
+          {/* Logo / success icon */}
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            {success ? (
+              <div className="kds-success-icon" style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: '#e6f9ee', margin: '0 auto 1rem',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: 26,
+              }}>✅</div>
+            ) : (
+              <div className="login-logo-wrap" style={{
+                width: 56, height: 56, borderRadius: 16,
+                background: 'var(--sky)', margin: '0 auto 1rem',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', fontSize: 26,
+              }}>🎒</div>
+            )}
+            <h1 style={{
+              fontSize: '1.35rem', fontWeight: 700, color: 'var(--charcoal)',
+            }}>
+              {success ? 'Welcome back!' : 'myKDS'}
+            </h1>
+            <p style={{
+              fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4,
+            }}>
+              {success ? 'Redirecting to your portal…' : 'Teachers Academic Portal'}
+            </p>
           </div>
-          <div style={{ marginBottom:'1.5rem' }}>
-            <label style={{ fontSize:'0.8rem', fontWeight:600,
-              color:'var(--charcoal)', display:'block', marginBottom:6 }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={form.password}
-              onChange={e => setForm({...form, password: e.target.value})}
-              style={{ width:'100%', padding:'0.7rem 1rem', borderRadius:10,
-                border:'1.5px solid var(--sky-light)', fontFamily:'Poppins',
-                fontSize:'0.9rem', outline:'none' }}
-              placeholder="••••••••"
-            />
-          </div>
-          {error && <p style={{ color:'#e05', fontSize:'0.8rem',
-            marginBottom:'1rem' }}>{error}</p>}
-          <button type="submit" style={{ width:'100%', padding:'0.8rem',
-            background:'var(--sky)', color:'var(--charcoal)', border:'none',
-            borderRadius:10, fontFamily:'Poppins', fontWeight:600,
-            fontSize:'0.95rem', cursor:'pointer' }}>
-            Sign In
-          </button>
-        </form>
+
+          {/* Redirect loading bar */}
+          {success && (
+            <div style={{
+              height: 4, borderRadius: 2,
+              background: 'var(--sky-light)',
+              overflow: 'hidden', marginBottom: '1.5rem',
+            }}>
+              <div style={{
+                height: '100%', width: '100%',
+                background: 'var(--sky)',
+                animation: 'kds-progress 0.6s ease forwards',
+              }} />
+              <style>{`
+                @keyframes kds-progress {
+                  from { transform: translateX(-100%); }
+                  to   { transform: translateX(0); }
+                }
+              `}</style>
+            </div>
+          )}
+
+          {!success && (
+            <form onSubmit={handleSubmit}>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{
+                  fontSize: '0.8rem', fontWeight: 600,
+                  color: 'var(--charcoal)', display: 'block', marginBottom: 6,
+                }}>Username</label>
+                <input
+                  className="kds-input"
+                  value={form.username}
+                  onChange={e => setForm({ ...form, username: e.target.value })}
+                  style={inputStyle}
+                  placeholder="Enter your username"
+                  required
+                  disabled={loading}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{
+                  fontSize: '0.8rem', fontWeight: 600,
+                  color: 'var(--charcoal)', display: 'block', marginBottom: 6,
+                }}>Password</label>
+                <input
+                  className="kds-input"
+                  type="password"
+                  value={form.password}
+                  onChange={e => setForm({ ...form, password: e.target.value })}
+                  style={inputStyle}
+                  placeholder="••••••••"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              
+               <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)' }}>
+                  Need help?{' '}
+                  <a
+                    href="https://link.kidsdenschool.in/u1T4boZT"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="kds-support-link"
+                  >
+                    Contact support
+                  </a>
+                </span>
+              </div>
+
+              {error && (
+                <div style={{
+                  color: '#c0392b', fontSize: '0.8rem',
+                  background: '#fff5f5', padding: '8px 12px',
+                  borderRadius: 8, marginBottom: '1rem',
+                  border: '1px solid #fde2e2',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  ⚠️ {error}
+                </div>
+              )}
+
+              <button type="submit" disabled={loading} style={{
+                width: '100%', padding: '0.85rem',
+                background: loading ? 'var(--sky-light)' : 'var(--sky)',
+                color: 'var(--charcoal)', border: 'none', borderRadius: 12,
+                fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.95rem',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'center', gap: 8,
+              }}>
+                {loading ? (
+                  <>
+                    <Spinner size={18} color="#5bb8f5" />
+                    Signing in…
+                  </>
+                ) : 'Sign In'}
+              </button>
+            </form>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

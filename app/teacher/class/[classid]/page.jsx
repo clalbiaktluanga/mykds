@@ -3,12 +3,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import MarksTable from '@/components/MarksTable';
 import AttendanceTable from '@/components/AttendanceTable';
+import PageLoader from '@/components/PageLoader';
 
 const TABS = ['Class Tests', 'Exams', 'Attendance', 'Notes'];
 
 export default function ClassPage() {
   const params = useParams();
-  const classId = params.classId || params.classid; // handle both cases
+  const classId = params.classId || params.classid;
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState(0);
@@ -18,7 +19,7 @@ export default function ClassPage() {
 
   useEffect(() => {
     if (!classId) return;
-
+    setLoading(true);
     Promise.all([
       fetch(`/api/classes/${classId}`).then(r => r.json()),
       fetch(`/api/classes/${classId}/students`).then(r => r.json()),
@@ -30,32 +31,35 @@ export default function ClassPage() {
   }, [classId]);
 
   const ICONS = {
-    'English': '📖','Mizo': '📝', 'Hindi': '📝', 'Mathematics': '🔢', 'Science': '🔬',
-    'Social Science': '🌍', 'EVS': '🌍', 'Information Technology': '💻',
-    'Moral Education': '⚽', 'Art': '🎨', 'Music': '🎵',
+    'English': '📖', 'Hindi': '📝', 'Math': '🔢', 'Science': '🔬',
+    'Social Science': '🌍', 'Computer Science': '💻',
+    'Physical Education': '⚽', 'Art': '🎨', 'Music': '🎵',
   };
 
-  return (
-    <div style={{ padding: '1rem', maxWidth: 960, margin: '0 auto' }}>
+  if (loading) return <PageLoader message="Loading class" />;
 
-      {/* Back button + Header */}
-      <div style={{ marginBottom: '1.2rem' }}>
-        <button
-          onClick={() => router.back()}
-          style={{
+  return (
+    <>
+      <style>{`
+        @keyframes kds-fade-up {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .kds-class-content { animation: kds-fade-up 0.3s ease both; }
+      `}</style>
+
+      <div className="kds-class-content"
+        style={{ padding: '1rem', maxWidth: 960, margin: '0 auto' }}>
+
+        {/* Back + Header */}
+        <div style={{ marginBottom: '1.2rem' }}>
+          <button onClick={() => router.back()} style={{
             background: 'none', border: 'none', cursor: 'pointer',
             fontSize: '0.82rem', color: 'var(--charcoal-light)',
             fontFamily: 'Poppins', padding: 0, marginBottom: '0.6rem',
             display: 'flex', alignItems: 'center', gap: 4,
-          }}
-        >
-          ← Back
-        </button>
+          }}>← Back</button>
 
-        {loading ? (
-          <div style={{ height: 28, width: 220, borderRadius: 8,
-            background: 'var(--sky-light)', opacity: 0.6 }} />
-        ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
             <div style={{
               width: 44, height: 44, borderRadius: 10,
@@ -66,8 +70,7 @@ export default function ClassPage() {
               {ICONS[classInfo?.subject] ?? '📚'}
             </div>
             <div>
-              <h2 style={{ fontWeight: 700, fontSize: '1.15rem',
-                color: 'var(--charcoal)', margin: 0 }}>
+              <h2 style={{ fontWeight: 700, fontSize: '1.15rem', color: 'var(--charcoal)', margin: 0 }}>
                 {classInfo?.name} {classInfo?.section} — {classInfo?.subject}
               </h2>
               <p style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)', margin: 0 }}>
@@ -75,61 +78,57 @@ export default function ClassPage() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{
+          display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
+          overflowX: 'auto', paddingBottom: 4,
+        }}>
+          {TABS.map((tab, i) => (
+            <button key={tab} onClick={() => setActiveTab(i)} style={{
+              padding: '0.5rem 1.1rem', borderRadius: 20,
+              background: activeTab === i ? 'var(--sky)' : 'white',
+              color: 'var(--charcoal)',
+              fontFamily: 'Poppins', fontWeight: activeTab === i ? 600 : 400,
+              fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap',
+              border: `1.5px solid ${activeTab === i ? 'var(--sky)' : 'var(--sky-light)'}`,
+              transition: 'all 0.15s',
+            }}>{tab}</button>
+          ))}
+        </div>
+
+        {/* No students warning */}
+        {students.length === 0 && (
+          <div style={{
+            background: '#fffbe6', border: '1.5px solid #ffe58f',
+            borderRadius: 12, padding: '1rem 1.2rem',
+            fontSize: '0.82rem', color: '#7c5e00', marginBottom: '1.2rem',
+            display: 'flex', alignItems: 'center', gap: '0.6rem',
+          }}>
+            ⚠️ No students found for <strong>{classInfo?.name} Section {classInfo?.section}</strong>.
+            Enroll students via Admin → Student Management.
+          </div>
+        )}
+
+        {/* Tab content */}
+        {activeTab === 0 && (
+          <MarksTable students={students} classId={classId} type="classtest" />
+        )}
+        {activeTab === 1 && (
+          <MarksTable students={students} classId={classId} type="exam" />
+        )}
+        {activeTab === 2 && (
+          <AttendanceTable students={students} classId={classId} />
+        )}
+        {activeTab === 3 && (
+          <NotesPanel students={students} classId={classId} />
         )}
       </div>
-
-      {/* Tabs */}
-      <div style={{
-        display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
-        overflowX: 'auto', paddingBottom: 4,
-      }}>
-        {TABS.map((tab, i) => (
-          <button key={tab} onClick={() => setActiveTab(i)} style={{
-            padding: '0.5rem 1.1rem', borderRadius: 20,
-            background: activeTab === i ? 'var(--sky)' : 'white',
-            color: 'var(--charcoal)',
-            fontFamily: 'Poppins', fontWeight: activeTab === i ? 600 : 400,
-            fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap',
-            border: `1.5px solid ${activeTab === i ? 'var(--sky)' : 'var(--sky-light)'}`,
-            transition: 'all 0.15s',
-          }}>
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      {/* No students warning */}
-      {!loading && students.length === 0 && (
-        <div style={{
-          background: '#fffbe6', border: '1.5px solid #ffe58f',
-          borderRadius: 12, padding: '1rem 1.2rem',
-          fontSize: '0.82rem', color: '#7c5e00',
-          marginBottom: '1.2rem',
-          display: 'flex', alignItems: 'center', gap: '0.6rem',
-        }}>
-          ⚠️ No students found for <strong>{classInfo?.name} Section {classInfo?.section}</strong>.
-          Make sure students are enrolled with the matching class and section in Student Management.
-        </div>
-      )}
-
-      {/* Tab Content */}
-      {activeTab === 0 && (
-        <MarksTable students={students} classId={classId} type="classtest" />
-      )}
-      {activeTab === 1 && (
-        <MarksTable students={students} classId={classId} type="exam" />
-      )}
-      {activeTab === 2 && (
-        <AttendanceTable students={students} classId={classId} />
-      )}
-      {activeTab === 3 && (
-        <NotesPanel students={students} classId={classId} />
-      )}
-    </div>
+    </>
   );
 }
 
-// Simple Notes panel inline
 function NotesPanel({ students, classId }) {
   const [notes, setNotes] = useState({});
   const [saved, setSaved] = useState({});
@@ -151,34 +150,29 @@ function NotesPanel({ students, classId }) {
       {students.map(s => (
         <div key={s._id} style={{
           background: 'white', borderRadius: 12,
-          border: '1.5px solid var(--sky-light)',
-          padding: '1rem',
+          border: '1.5px solid var(--sky-light)', padding: '1rem',
         }}>
           <div style={{ fontWeight: 600, fontSize: '0.88rem',
             marginBottom: '0.5rem', color: 'var(--charcoal)' }}>
             {s.rollNo} — {s.name}
           </div>
           <div style={{ display: 'flex', gap: '0.6rem' }}>
-            <textarea
-              rows={2}
-              placeholder="Add a note for this student..."
+            <textarea rows={2} placeholder="Add a note for this student..."
               value={notes[s._id] || ''}
               onChange={e => setNotes(prev => ({ ...prev, [s._id]: e.target.value }))}
               style={{
                 flex: 1, padding: '0.6rem 0.8rem', borderRadius: 8,
-                border: '1.5px solid var(--sky-light)',
-                fontFamily: 'Poppins', fontSize: '0.82rem',
-                resize: 'vertical', outline: 'none',
+                border: '1.5px solid var(--sky-light)', fontFamily: 'Poppins',
+                fontSize: '0.82rem', resize: 'vertical', outline: 'none',
               }}
             />
             <button onClick={() => handleSave(s._id)} style={{
               padding: '0.5rem 1rem', borderRadius: 8,
               background: saved[s._id] ? '#e6f9ee' : 'var(--sky)',
-              border: 'none', fontFamily: 'Poppins',
-              fontSize: '0.78rem', fontWeight: 600,
-              cursor: 'pointer', alignSelf: 'flex-end',
+              border: 'none', fontFamily: 'Poppins', fontSize: '0.78rem',
+              fontWeight: 600, cursor: 'pointer', alignSelf: 'flex-end',
               color: saved[s._id] ? '#1a8a3c' : 'var(--charcoal)',
-              transition: 'background 0.2s',
+              transition: 'all 0.2s',
             }}>
               {saved[s._id] ? '✓ Saved' : 'Save'}
             </button>
