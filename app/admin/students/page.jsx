@@ -1,10 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-const CLASSES = ['Class I','Class II','Class III','Class IV','Class V',
+const CLASSES = ['KG I', 'KG II', 'Class I', 'Class II', 'Class III', 'Class IV', 'Class V',
   'Class VI','Class VII','Class VIII','Class IX','Class X'];
 const SECTIONS = ['A', 'B', 'C'];
-const EMPTY = { rollNo: '', name: '', class: 'Class I', section: 'A', academicYear: '2026' };
+const EMPTY = { rollNo: '', name: '', class: 'Class VIII', section: 'A', academicYear: '2026' };
 
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState([]);
@@ -185,12 +185,12 @@ export default function AdminStudentsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Roll Number</label>
-                <input style={inputStyle} placeholder="e.g. 01"
+                <input style={inputStyle} placeholder="e.g. 8101"
                   value={form.rollNo} onChange={e => setForm({ ...form, rollNo: e.target.value })} />
               </div>
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Full Name</label>
-                <input style={inputStyle} placeholder="e.g. Aarav Mehta"
+                <input style={inputStyle} placeholder="e.g. John Doe"
                   value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
               </div>
               {/* Class + Section side by side */}
@@ -212,7 +212,7 @@ export default function AdminStudentsPage() {
               </div>
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Academic Year</label>
-                <input style={inputStyle} placeholder="e.g. 2024-25"
+                <input style={inputStyle} placeholder="e.g. 2026"
                   value={form.academicYear} onChange={e => setForm({ ...form, academicYear: e.target.value })} />
               </div>
             </div>

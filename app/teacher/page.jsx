@@ -38,7 +38,7 @@ export default function TeacherDashboard() {
 
   const ICONS = {
     'English':'📖', 'Mizo':'📝', 'Hindi':'📝','Mathematics':'🔢','Science':'🔬',
-    'Social Science':'🌍', 'EVS':'🌍', 'IT':'💻','Moral Education':'🙏','Art':'🎨','Music':'🎵'
+    'Social Science':'🌍', 'EVS':'🌍', 'IT':'💻','Moral Values':'🙏','Art':'🎨','Music':'🎵'
   };
 
   return (

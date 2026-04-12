@@ -50,8 +50,7 @@ function ClassViewContent() {
 
   const getScoreColor = (score) => {
     if (score === null || score === undefined) return { bg: 'transparent', color: '#aaa' };
-    if (score >= 80) return { bg: '#e6f9ee', color: '#1a8a3c' };
-    if (score >= 60) return { bg: '#fff8e1', color: '#c67c00' };
+    if (score >= 40) return { bg: '#e6f9ee', color: '#1a8a3c' };
     return { bg: '#fdecea', color: '#c0392b' };
   };
 
@@ -209,11 +208,8 @@ function ClassViewContent() {
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem',
           flexWrap: 'wrap', fontSize: '0.75rem' }}>
           {[
-            { label: '≥ 75 — O', bg: '#e6f9ee', color: '#1a8a3c' },
-            { label: '60-74 — A', bg: '#fff8e1', color: '#c67c00' },
-            { label: '50-59 — B', bg: '#fff8e1', color: '#c67c00' },
-            { label: '40-49 — C', bg: '#fff8e1', color: '#c67c00' },
-            { label: '< 39 — F', bg: '#fdecea', color: '#c0392b' },
+            { label: '≥ 40 — P', bg: '#e6f9ee', color: '#2ecc71' },
+            { label: '< 40 — F', bg: '#fdecea', color: '#e74c3c' },
           ].map(l => (
             <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ background: l.bg, color: l.color,

@@ -2,6 +2,7 @@
 import { signIn } from 'next-auth/react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Spinner from '@/components/Spinner';
 
 export default function LoginPage() {
@@ -52,10 +53,6 @@ export default function LoginPage() {
           from { opacity: 0; transform: translateY(24px) scale(0.97); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
         }
-        @keyframes kds-logo-bounce {
-          0%, 100% { transform: translateY(0); }
-          40%       { transform: translateY(-6px); }
-        }
         @keyframes kds-success-pop {
           0%   { transform: scale(0.8); opacity: 0; }
           60%  { transform: scale(1.15); }
@@ -64,9 +61,6 @@ export default function LoginPage() {
         .login-card {
           animation: kds-login-in 0.45s cubic-bezier(.22,1,.36,1) both;
         }
-        .login-logo-wrap {
-          animation: kds-logo-bounce 1.8s ease-in-out infinite;
-        }
         .kds-input:focus {
           border-color: var(--sky, #87cefa) !important;
           box-shadow: 0 0 0 3px rgba(135,206,250,0.15);
@@ -74,9 +68,19 @@ export default function LoginPage() {
         .kds-success-icon {
           animation: kds-success-pop 0.4s cubic-bezier(.22,1,.36,1) both;
         }
+        .kds-support-link {
+          color: var(--sky-dark, #5bb8f5);
+          text-decoration: none;
+          font-weight: 600;
+        }
+        .kds-support-link:hover { text-decoration: underline; }
+        @keyframes kds-progress {
+          from { transform: translateX(-100%); }
+          to   { transform: translateX(0); }
+        }
       `}</style>
 
-      <div style={{
+      <div className="no-navbar-padding" style={{
         minHeight: '100vh', display: 'flex',
         alignItems: 'center', justifyContent: 'center',
         background: 'var(--bg, #f7fbff)',
@@ -89,33 +93,46 @@ export default function LoginPage() {
           border: '1.5px solid var(--sky-light)',
         }}>
 
-          {/* Logo / success icon */}
+          {/* Logo / success state */}
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             {success ? (
-              <div className="kds-success-icon" style={{
-                width: 56, height: 56, borderRadius: 16,
-                background: '#e6f9ee', margin: '0 auto 1rem',
-                display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: 26,
-              }}>✅</div>
+              <>
+                <div className="kds-success-icon" style={{
+                  width: 64, height: 64, borderRadius: 18,
+                  background: '#e6f9ee', margin: '0 auto 1rem',
+                  display: 'flex', alignItems: 'center',
+                  justifyContent: 'center', fontSize: 30,
+                }}>✅</div>
+                <h1 style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--charcoal)' }}>
+                  Welcome back!
+                </h1>
+                <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
+                  Redirecting to your portal…
+                </p>
+              </>
             ) : (
-              <div className="login-logo-wrap" style={{
-                width: 56, height: 56, borderRadius: 16,
-                background: 'var(--sky)', margin: '0 auto 1rem',
-                display: 'flex', alignItems: 'center',
-                justifyContent: 'center', fontSize: 26,
-              }}>🎒</div>
+              <>
+                {/* School logo image */}
+                <div style={{
+                  margin: '0 auto 1rem',
+                  width: 180, height: 60,
+                  position: 'relative',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Image
+                    src="/mykds-logo-tb.png"
+                    alt="myKDS"
+                    width={180}
+                    height={60}
+                    style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+                    priority
+                  />
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
+                  Teachers Academic Portal
+                </p>
+              </>
             )}
-            <h1 style={{
-              fontSize: '1.35rem', fontWeight: 700, color: 'var(--charcoal)',
-            }}>
-              {success ? 'Welcome back!' : 'myKDS'}
-            </h1>
-            <p style={{
-              fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4,
-            }}>
-              {success ? 'Redirecting to your portal…' : 'Teachers Academic Portal'}
-            </p>
           </div>
 
           {/* Redirect loading bar */}
@@ -130,12 +147,6 @@ export default function LoginPage() {
                 background: 'var(--sky)',
                 animation: 'kds-progress 0.6s ease forwards',
               }} />
-              <style>{`
-                @keyframes kds-progress {
-                  from { transform: translateX(-100%); }
-                  to   { transform: translateX(0); }
-                }
-              `}</style>
             </div>
           )}
 
@@ -157,7 +168,7 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '1.2rem' }}>
                 <label style={{
                   fontSize: '0.8rem', fontWeight: 600,
                   color: 'var(--charcoal)', display: 'block', marginBottom: 6,
@@ -173,18 +184,11 @@ export default function LoginPage() {
                   disabled={loading}
                 />
               </div>
-              
-               <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
+
+              <div style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
                 <span style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)' }}>
-                  Need help?{' '}
-                  <a
-                    href="https://link.kidsdenschool.in/u1T4boZT"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="kds-support-link"
-                  >
-                    Contact support
-                  </a>
+                  {'Need help? '}
+                  <a href="https://link.kidsdenschool.in/u1T4boZT" target="_blank" rel="noopener noreferrer" className="kds-support-link">Contact support</a>
                 </span>
               </div>
 
@@ -219,6 +223,7 @@ export default function LoginPage() {
               </button>
             </form>
           )}
+
         </div>
       </div>
     </>

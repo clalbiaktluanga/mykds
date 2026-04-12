@@ -344,6 +344,8 @@ export default function LandingPage() {
         }
       `}</style>
 
+      <div className="no-navbar-padding landing-wrap"></div>
+
       {/* ── NAVBAR ── */}
       <nav className="nav">
         <div className="nav-logo">

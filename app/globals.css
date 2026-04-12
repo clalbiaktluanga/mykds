@@ -20,3 +20,6 @@ body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--c
   .marks-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .tile-grid { grid-template-columns: 1fr !important; }
 }
+main {
+  padding-top: 72px;
+}
