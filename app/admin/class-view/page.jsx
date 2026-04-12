@@ -209,9 +209,11 @@ function ClassViewContent() {
         <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem',
           flexWrap: 'wrap', fontSize: '0.75rem' }}>
           {[
-            { label: '≥ 80 — Good', bg: '#e6f9ee', color: '#1a8a3c' },
-            { label: '60–79 — Average', bg: '#fff8e1', color: '#c67c00' },
-            { label: '< 60 — Needs attention', bg: '#fdecea', color: '#c0392b' },
+            { label: '≥ 75 — O', bg: '#e6f9ee', color: '#1a8a3c' },
+            { label: '60-74 — A', bg: '#fff8e1', color: '#c67c00' },
+            { label: '50-59 — B', bg: '#fff8e1', color: '#c67c00' },
+            { label: '40-49 — C', bg: '#fff8e1', color: '#c67c00' },
+            { label: '< 39 — F', bg: '#fdecea', color: '#c0392b' },
           ].map(l => (
             <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ background: l.bg, color: l.color,

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 const CLASSES = ['Class I','Class II','Class III','Class IV','Class V',
   'Class VI','Class VII','Class VIII','Class IX','Class X'];
 const SECTIONS = ['A', 'B', 'C'];
-const EMPTY = { rollNo: '', name: '', class: 'Class I', section: 'A', academicYear: '2024-25' };
+const EMPTY = { rollNo: '', name: '', class: 'Class I', section: 'A', academicYear: '2026' };
 
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState([]);

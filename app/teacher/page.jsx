@@ -37,9 +37,8 @@ export default function TeacherDashboard() {
   }, []);
 
   const ICONS = {
-    'English': '📖', 'Hindi': '📝', 'Math': '🔢', 'Science': '🔬',
-    'Social Science': '🌍', 'Computer Science': '💻',
-    'Physical Education': '⚽', 'Art': '🎨', 'Music': '🎵',
+    'English':'📖', 'Mizo':'📝', 'Hindi':'📝','Mathematics':'🔢','Science':'🔬',
+    'Social Science':'🌍', 'EVS':'🌍', 'IT':'💻','Moral Education':'🙏','Art':'🎨','Music':'🎵'
   };
 
   return (
@@ -64,8 +63,8 @@ export default function TeacherDashboard() {
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--charcoal)' }}>
             {loading
-              ? 'Good morning 👋'
-              : `Good morning, ${session?.user?.name ?? 'Teacher'} 👋`}
+              ? 'Welcome 👋'
+              : `Welcome, ${session?.user?.name ?? 'Teacher'} 👋`}
           </h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
             Your assigned classes this year
