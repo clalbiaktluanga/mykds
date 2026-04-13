@@ -22,6 +22,7 @@ export default function Navbar({ role, name }) {
         @media (max-width: 480px) {
           .kds-role-badge { display: none !important; }
           .kds-user-name  { display: none !important; }
+          .kds-nav-logo img { height: 24px !important; }
         }
       `}</style>
 
@@ -37,6 +38,7 @@ export default function Navbar({ role, name }) {
 
         {/* Logo */}
         <div
+        className="kds-nav-logo"
           onClick={() => router.push(role === 'admin' ? '/admin' : '/teacher')}
           style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
         >
@@ -45,7 +47,7 @@ export default function Navbar({ role, name }) {
             alt="Kids Den School"
             width={150}
             height={36}
-            style={{ objectFit: 'contain', height: 32, width: 'auto' }}
+            style={{ objectFit: 'contain', height: 28, width: 'auto' }}
             priority
           />
         </div>
