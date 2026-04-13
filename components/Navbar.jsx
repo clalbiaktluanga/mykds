@@ -44,8 +44,8 @@ export default function Navbar({ role, name }) {
             src="/kds-logo-tb-black-wm.png"
             alt="Kids Den School"
             width={150}
-            height={38}
-            style={{ objectFit: 'contain', height: 36, width: 'auto' }}
+            height={36}
+            style={{ objectFit: 'contain', height: 32, width: 'auto' }}
             priority
           />
         </div>

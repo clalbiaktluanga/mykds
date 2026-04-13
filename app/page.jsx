@@ -17,7 +17,7 @@ export default function LandingPage() {
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital@1&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,700;1,800&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -114,12 +114,14 @@ export default function LandingPage() {
           margin-bottom: 1.2rem;
         }
         .hero-title em {
-          font-style: italic; font-weight: 800;
-        }
-        .hero-title strong {
-          font-style: italic; font-weight: 800;
-          display: block;
-        }
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-weight: 400;
+}
+.hero-title strong {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal; font-weight: 800;
+  display: block;
+}
         .hero-sub {
           font-size: 1rem; color: #555; line-height: 1.7;
           max-width: 440px; margin-bottom: 2.5rem; font-weight: 400;
@@ -341,10 +343,11 @@ export default function LandingPage() {
           .float-chip { display: none; }
           .features-section, .portals-section { padding: 3.5rem 1.5rem; }
           .footer { padding: 2rem 1.5rem 1.2rem; }
+          .nav-logo img {height: 28px !important;}
         }
       `}</style>
 
-      <div className="no-navbar-padding landing-wrap"></div>
+      <div className="no-navbar-padding landing-wrap">
 
       {/* ── NAVBAR ── */}
       <nav className="nav">
@@ -378,8 +381,8 @@ export default function LandingPage() {
           <div className="hero-left">
             <p className="hero-eyebrow">Staff & Student Portal</p>
             <h1 className="hero-title">
-              <em>Welcome to</em>
-              <strong><em>my.</em>kidsdenschool</strong>
+                <em>Welcome to</em>
+                <strong>myKDS</strong>
             </h1>
             <p className="hero-sub">
               A simple and secure portal for Kids Den School students and teachers
@@ -521,6 +524,7 @@ export default function LandingPage() {
           <p className="footer-copy">Copyright {new Date().getFullYear()} – Kids Den School</p>
         </div>
       </footer>
+      </div>
     </>
   );
 }
