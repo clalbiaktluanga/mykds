@@ -28,6 +28,7 @@ export default function TeacherDashboard() {
   const router = useRouter();
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ctView, setCtView] = useState({ enabled: false, classes: [] });
 
   useEffect(() => {
     fetch('/api/teacher/classes')
@@ -35,6 +36,15 @@ export default function TeacherDashboard() {
       .then(data => { setClasses(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (session?.user?.role === 'classTeacher') {
+      fetch('/api/teacher/classteacher-view')
+        .then(r => r.json())
+        .then(setCtView)
+        .catch(() => {});
+    }
+  }, [session]);
 
   const ICONS = {
     'English':'📖', 'Mizo':'📝', 'Hindi':'📝','Mathematics':'🔢','Science':'🔬',

@@ -7,7 +7,8 @@ export default withAuth(function middleware(req) {
 
   if (pathname.startsWith('/admin') && role !== 'admin')
     return NextResponse.redirect(new URL('/login', req.url));
-  if (pathname.startsWith('/teacher') && role !== 'teacher')
+
+  if (pathname.startsWith('/teacher') && role !== 'teacher' && role !== 'classTeacher')
     return NextResponse.redirect(new URL('/login', req.url));
 }, {
   callbacks: { authorized: ({ token }) => !!token }

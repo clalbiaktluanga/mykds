@@ -6,7 +6,7 @@ export async function PUT(req, { params }) {
   await connectDB();
   const { name, username, password, role, assignedClasses } = await req.json();
   const update = { name, username, role, assignedClasses: assignedClasses || [] };
-  if (password) update.password = await bcrypt.hash(password, 10);
+  if (password && password.trim()) update.password = await bcrypt.hash(password, 10);
   const user = await User.findByIdAndUpdate(params.id, update, { new: true })
     .select('-password').populate('assignedClasses');
   if (!user) return Response.json({ error: 'User not found' }, { status: 404 });

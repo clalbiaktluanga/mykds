@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     setTimeout(() => {
       if (role === 'admin') router.push('/admin');
-      else if (role === 'teacher') router.push('/teacher');
+      else if (role === 'teacher' || role === 'classTeacher') router.push('/teacher');
       else { setError('Unknown role. Contact admin.'); setLoading(false); setSuccess(false); }
     }, 600);
   };

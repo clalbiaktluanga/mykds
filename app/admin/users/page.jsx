@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-const ROLES = ['teacher', 'admin'];
+const ROLES = ['teacher','classTeacher', 'admin'];
 const EMPTY_USER = { name: '', username: '', password: '', role: 'teacher', assignedClasses: [] };
 
 export default function AdminUsersPage() {
@@ -14,15 +14,19 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [tab, setTab] = useState('teacher');
+  const [ctViewEnabled, setCtViewEnabled] = useState(false);
+  const [settingLoading, setSettingLoading] = useState(false);
 
-  const fetchAll = async () => {
-    const [u, c] = await Promise.all([
-      fetch('/api/admin/users').then(r => r.json()),
-      fetch('/api/admin/classes').then(r => r.json()),
-    ]);
-    setUsers(u);
-    setAllClasses(c);
-  };
+ const fetchAll = async () => {
+  const [u, c, s] = await Promise.all([
+    fetch('/api/admin/users').then(r => r.json()),
+    fetch('/api/admin/classes').then(r => r.json()),
+    fetch('/api/admin/settings').then(r => r.json()),
+  ]);
+  setUsers(u);
+  setAllClasses(c);
+  setCtViewEnabled(s.classTeacherViewEnabled || false);
+};
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -54,6 +58,55 @@ export default function AdminUsersPage() {
         : [...prev.assignedClasses, classId],
     }));
   };
+
+  const toggleCtView = async () => {
+  setSettingLoading(true);
+  const newVal = !ctViewEnabled;
+  await fetch('/api/admin/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: 'classTeacherViewEnabled', value: newVal }),
+  });
+  setCtViewEnabled(newVal);
+  setSettingLoading(false);
+};
+
+{/* Class Teacher View Setting */}
+<div style={{
+  background: ctViewEnabled ? '#e6f9ee' : 'white',
+  border: `1.5px solid ${ctViewEnabled ? '#a8e6c0' : 'var(--sky-light)'}`,
+  borderRadius: 14, padding: '1rem 1.2rem',
+  marginBottom: '1.5rem',
+  display: 'flex', alignItems: 'center',
+  justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.8rem',
+  transition: 'all 0.3s',
+}}>
+  <div>
+    <div style={{ fontWeight: 600, fontSize: '0.88rem',
+      color: ctViewEnabled ? '#1a8a3c' : 'var(--charcoal)' }}>
+      {ctViewEnabled ? '✅' : '👁'} Allow Class Teachers to View Student Marks
+    </div>
+    <div style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)', marginTop: 2 }}>
+      {ctViewEnabled
+        ? 'Class teachers can currently view their assigned class marks (read-only)'
+        : 'Class teachers cannot view any marks right now'}
+    </div>
+  </div>
+  <button
+    onClick={toggleCtView}
+    disabled={settingLoading}
+    style={{
+      padding: '0.5rem 1.2rem', borderRadius: 20,
+      background: ctViewEnabled ? '#1a8a3c' : 'var(--charcoal)',
+      color: 'white', border: 'none',
+      fontFamily: 'Poppins', fontWeight: 600,
+      fontSize: '0.82rem', cursor: settingLoading ? 'not-allowed' : 'pointer',
+      transition: 'all 0.2s', minWidth: 80,
+    }}
+  >
+    {settingLoading ? '...' : ctViewEnabled ? 'Turn Off' : 'Turn On'}
+  </button>
+</div>
 
   const handleSubmit = async () => {
     setLoading(true); setError('');
@@ -110,7 +163,7 @@ export default function AdminUsersPage() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.2rem' }}>
-        {['teacher', 'admin'].map(r => (
+        {['teacher', 'classTeacher', 'admin'].map(r => (
           <button key={r} onClick={() => setTab(r)} style={{
             padding: '0.45rem 1.1rem', borderRadius: 20,
             background: tab === r ? 'var(--sky)' : 'white',
@@ -118,7 +171,7 @@ export default function AdminUsersPage() {
             fontSize: '0.82rem', cursor: 'pointer', textTransform: 'capitalize',
             border: `1.5px solid ${tab === r ? 'var(--sky)' : 'var(--sky-light)'}`,
           }}>
-            {r === 'teacher' ? '🧑‍🏫' : '🔑'} {r}s ({users.filter(u => u.role === r).length})
+            {r === 'teacher' ? '🧑‍🏫' : r === 'classTeacher' ? '📚' : '🔑'} {r}s ({users.filter(u => u.role === r).length})
           </button>
         ))}
       </div>

@@ -1,10 +1,12 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+if (mongoose.models.User) delete mongoose.models.User;
+
 const UserSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['teacher', 'admin'], required: true },
+  role: { type: String, enum: ['teacher', 'admin', 'classTeacher'], required: true },
   name: String,
   assignedClasses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Class' }],
 }, { timestamps: true });
