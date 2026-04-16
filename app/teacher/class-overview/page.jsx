@@ -1,7 +1,9 @@
 'use client';
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import MarksViewer from '@/components/MarksViewer';
+import PageLoader from '@/components/PageLoader';
 
 const TEST_TABS = [
   { label: 'Test 1', type: 'classtest', index: 1 },
@@ -14,7 +16,7 @@ const TEST_TABS = [
   { label: 'Term 3', type: 'exam', index: 3 },
 ];
 
-// ── Pure-JS CSV export (opens in Excel) ──────────────────────────────────────
+// ── Pure-JS CSV/Excel export ──────────────────────────────────────────────────
 function exportToExcel({ students, subjects, tabLabel, className, section }) {
   const now = new Date();
   const dateStr = now.toLocaleString('en-IN', {
@@ -44,6 +46,7 @@ function exportToExcel({ students, subjects, tabLabel, className, section }) {
     rows.push(row.map(escape).join(','));
   });
 
+  // Timestamp row
   rows.push('');
   rows.push(escape(`Downloaded on: ${dateStr}`));
 
@@ -57,26 +60,32 @@ function exportToExcel({ students, subjects, tabLabel, className, section }) {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
-function ClassViewContent() {
-  const searchParams = useSearchParams();
+function ClassOverviewContent() {
   const router = useRouter();
-  const className = searchParams.get('class');
-  const section = searchParams.get('section');
-
+  const { data: session } = useSession();
+  const [ctData, setCtData] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [ctLoading, setCtLoading] = useState(true);
 
   const currentTab = TEST_TABS[activeTab];
 
   useEffect(() => {
-    if (!className || !section) return;
+    fetch('/api/teacher/classteacher-view')
+      .then(r => r.json())
+      .then(d => { setCtData(d); setCtLoading(false); })
+      .catch(() => setCtLoading(false));
+  }, []);
+
+  useEffect(() => {
+    if (!ctData?.classTeacherClass || !ctData?.classTeacherSection) return;
     setLoading(true);
-    fetch(`/api/admin/class-report?class=${encodeURIComponent(className)}&section=${section}&type=${currentTab.type}&index=${currentTab.index}`)
+    fetch(`/api/admin/class-report?class=${encodeURIComponent(ctData.classTeacherClass)}&section=${ctData.classTeacherSection}&type=${currentTab.type}&index=${currentTab.index}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
-  }, [className, section, activeTab]);
+  }, [ctData, activeTab]);
 
   const thStyle = {
     padding: '0.6rem 0.8rem', fontWeight: 600, fontSize: '0.75rem',
@@ -94,6 +103,22 @@ function ClassViewContent() {
     return { bg: '#fdecea', color: '#c0392b' };
   };
 
+  if (ctLoading) return <PageLoader message="Loading" />;
+
+  if (!ctData?.enabled || !ctData?.assigned) {
+    return (
+      <div style={{ padding: '2rem', maxWidth: 500, margin: '4rem auto', textAlign: 'center', background: 'white', borderRadius: 16, border: '1.5px solid var(--sky-light)' }}>
+        <div style={{ fontSize: 36, marginBottom: '0.8rem' }}>🔒</div>
+        <div style={{ fontWeight: 600, color: 'var(--charcoal)' }}>Class Teacher view not available</div>
+        <div style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 6 }}>Contact your admin to enable this feature.</div>
+        <button onClick={() => router.push('/teacher')} style={{ marginTop: '1.5rem', padding: '0.6rem 1.4rem', borderRadius: 10, background: 'var(--sky)', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>← Back</button>
+      </div>
+    );
+  }
+
+  const className = ctData.classTeacherClass;
+  const section = ctData.classTeacherSection;
+
   return (
     <div style={{ padding: '1rem', maxWidth: 1100, margin: '0 auto' }}>
 
@@ -102,9 +127,14 @@ function ClassViewContent() {
         <button onClick={() => router.back()} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', color: 'var(--charcoal-light)', fontFamily: 'Poppins', padding: 0, marginBottom: '0.6rem', display: 'flex', alignItems: 'center', gap: 4 }}>← Back</button>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.8rem' }}>
           <div>
-            <h2 style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--charcoal)', margin: 0 }}>
-              🏫 {className} — Section {section}
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', flexWrap: 'wrap' }}>
+              <h2 style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--charcoal)', margin: 0 }}>
+                📋 {className} — Section {section}
+              </h2>
+              <span style={{ background: '#e6f9ee', color: '#1a8a3c', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, border: '1px solid #a8e6c0' }}>
+                Class Teacher View
+              </span>
+            </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
               {data?.students?.length ?? 0} students · {data?.subjects?.length ?? 0} subjects
             </p>
@@ -140,7 +170,7 @@ function ClassViewContent() {
         </div>
       </div>
 
-      {/* Marks table */}
+      {/* Table */}
       {loading ? (
         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--charcoal-light)', fontSize: '0.88rem' }}>Loading marks...</div>
       ) : !data?.students?.length ? (
@@ -196,7 +226,7 @@ function ClassViewContent() {
             </table>
           </div>
 
-          {/* Edit History by Subject */}
+          {/* Edit History by Subject (read-only) */}
           <div style={{ marginTop: '1.5rem' }}>
             <h3 style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--charcoal-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '1rem' }}>
               Edit History by Subject
@@ -230,10 +260,10 @@ function ClassViewContent() {
   );
 }
 
-export default function ClassViewPage() {
+export default function ClassOverviewPage() {
   return (
-    <Suspense fallback={<div style={{ padding: '2rem', textAlign: 'center', color: 'var(--charcoal-light)' }}>Loading...</div>}>
-      <ClassViewContent />
+    <Suspense fallback={<PageLoader message="Loading" />}>
+      <ClassOverviewContent />
     </Suspense>
   );
 }

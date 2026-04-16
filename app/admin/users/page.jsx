@@ -10,6 +10,106 @@ const EMPTY_USER = {
   classTeacherSection: '',
 };
 
+function LoginHistoryPanel() {
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterUser, setFilterUser] = useState('');
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/admin/users').then(r => r.json()).then(u => setUsers(Array.isArray(u) ? u : []));
+  }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    const url = filterUser ? `/api/admin/login-history?userId=${filterUser}` : '/api/admin/login-history';
+    fetch(url)
+      .then(r => r.json())
+      .then(d => { setHistory(Array.isArray(d) ? d : []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [filterUser]);
+
+  const fmt = (dateStr) => {
+    const d = new Date(dateStr);
+    return d.toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    });
+  };
+
+  const roleColor = { admin: { bg: '#fdecea', color: '#c0392b' }, teacher: { bg: 'var(--sky-light)', color: 'var(--charcoal)' } };
+
+  return (
+    <div>
+      {/* Filter */}
+      <div style={{ marginBottom: '1rem', display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--charcoal-light)' }}>Filter by user:</span>
+        <select
+          value={filterUser}
+          onChange={e => setFilterUser(e.target.value)}
+          style={{ padding: '0.4rem 0.8rem', borderRadius: 8, border: '1.5px solid var(--sky-light)', fontFamily: 'Poppins', fontSize: '0.82rem', outline: 'none', background: 'white' }}
+        >
+          <option value="">All users</option>
+          {users.filter(u => u.role !== 'admin' || true).map(u => (
+            <option key={u._id} value={u._id}>{u.name} (@{u.username})</option>
+          ))}
+        </select>
+      </div>
+
+      {loading && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--charcoal-light)', fontSize: '0.82rem' }}>Loading history...</div>}
+
+      {!loading && history.length === 0 && (
+        <div style={{ padding: '3rem', textAlign: 'center', background: 'white', borderRadius: 16, border: '1.5px solid var(--sky-light)', color: 'var(--charcoal-light)', fontSize: '0.88rem' }}>
+          No login history found.
+        </div>
+      )}
+
+      {!loading && history.length > 0 && (
+        <div style={{ background: 'white', borderRadius: 14, border: '1.5px solid var(--sky-light)', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                {['User', 'Role', 'Login Time', 'Edits This Session'].map(h => (
+                  <th key={h} style={{ padding: '0.65rem 1rem', fontWeight: 600, fontSize: '0.75rem', background: 'var(--sky-light)', color: 'var(--charcoal)', textAlign: 'left', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {history.map((entry, i) => {
+                const rc = roleColor[entry.role] || roleColor.teacher;
+                return (
+                  <tr key={entry._id || i} style={{ background: i % 2 === 0 ? 'white' : '#fafeff' }}>
+                    <td style={{ padding: '0.6rem 1rem', fontSize: '0.82rem' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--charcoal)' }}>{entry.name}</div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--charcoal-light)' }}>@{entry.username}</div>
+                    </td>
+                    <td style={{ padding: '0.6rem 1rem' }}>
+                      <span style={{ background: rc.bg, color: rc.color, fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, textTransform: 'capitalize' }}>{entry.role}</span>
+                    </td>
+                    <td style={{ padding: '0.6rem 1rem', fontSize: '0.8rem', color: 'var(--charcoal)', whiteSpace: 'nowrap' }}>
+                      {fmt(entry.loginAt)}
+                    </td>
+                    <td style={{ padding: '0.6rem 1rem' }}>
+                      <span style={{
+                        background: entry.changesCount > 0 ? '#fff8e1' : '#f5f5f5',
+                        color: entry.changesCount > 0 ? '#c67c00' : '#999',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        padding: '2px 10px', borderRadius: 20,
+                      }}>
+                        {entry.changesCount > 0 ? `${entry.changesCount} edit${entry.changesCount !== 1 ? 's' : ''}` : 'No edits'}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [allClasses, setAllClasses] = useState([]);
@@ -90,7 +190,7 @@ export default function AdminUsersPage() {
     await fetchAll(); setDeleteConfirm(null);
   };
 
-  const filtered = users.filter(u => tab === 'admin' ? u.role === 'admin' : u.role === 'teacher');
+  const filtered = users.filter(u => tab === 'admin' ? u.role === 'admin' : tab === 'history' ? false : u.role === 'teacher');
   const hasCtAssignment = (user) => user.classTeacherClass && user.classTeacherSection;
 
   const inputStyle = {
@@ -101,14 +201,16 @@ export default function AdminUsersPage() {
   const classLabel = (cls) => `${cls.name} ${cls.section} — ${cls.subject}`;
 
   return (
-    <div style={{ padding: '1.5rem', maxWidth: 750, margin: '0 auto' }}>
+    <div style={{ padding: '1.5rem', maxWidth: 800, margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
         <div>
           <h2 style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--charcoal)' }}>👥 User Management</h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)', marginTop: 2 }}>Add, edit or remove staff accounts</p>
         </div>
-        <button onClick={openAdd} style={{ background: 'var(--sky)', border: 'none', borderRadius: 10, padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', color: 'var(--charcoal)' }}>+ Add User</button>
+        {tab !== 'history' && (
+          <button onClick={openAdd} style={{ background: 'var(--sky)', border: 'none', borderRadius: 10, padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', color: 'var(--charcoal)' }}>+ Add User</button>
+        )}
       </div>
 
       {/* CT View Toggle — teacher tab only */}
@@ -137,63 +239,72 @@ export default function AdminUsersPage() {
       )}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.2rem' }}>
-        {['teacher', 'admin'].map(r => (
-          <button key={r} onClick={() => setTab(r)} style={{
+      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
+        {[
+          { key: 'teacher', label: '🧑‍🏫 Teachers' },
+          { key: 'admin', label: '🔑 Admins' },
+          { key: 'history', label: '🕐 Session History' },
+        ].map(({ key, label }) => (
+          <button key={key} onClick={() => setTab(key)} style={{
             padding: '0.45rem 1.1rem', borderRadius: 20,
-            background: tab === r ? 'var(--sky)' : 'white',
-            fontFamily: 'Poppins', fontWeight: tab === r ? 600 : 400, fontSize: '0.82rem',
-            cursor: 'pointer', textTransform: 'capitalize',
-            border: `1.5px solid ${tab === r ? 'var(--sky)' : 'var(--sky-light)'}`,
+            background: tab === key ? 'var(--sky)' : 'white',
+            fontFamily: 'Poppins', fontWeight: tab === key ? 600 : 400, fontSize: '0.82rem',
+            cursor: 'pointer',
+            border: `1.5px solid ${tab === key ? 'var(--sky)' : 'var(--sky-light)'}`,
           }}>
-            {r === 'teacher' ? '🧑‍🏫' : '🔑'} {r}s ({users.filter(u => u.role === r).length})
+            {label}{key !== 'history' && ` (${users.filter(u => u.role === key).length})`}
           </button>
         ))}
       </div>
 
+      {/* History tab */}
+      {tab === 'history' && <LoginHistoryPanel />}
+
       {/* User Cards */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        {filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--charcoal-light)', fontSize: '0.88rem' }}>
-            No {tab}s found. Click "+ Add User" to create one.
-          </div>
-        )}
-        {filtered.map(user => (
-          <div key={user._id} style={{ background: 'white', borderRadius: 14, border: '1.5px solid var(--sky-light)', padding: '1rem 1.2rem', boxShadow: '0 2px 10px rgba(135,206,250,0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                <div style={{ width: 42, height: 42, borderRadius: 10, background: hasCtAssignment(user) ? '#e6f9ee' : 'var(--sky-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
-                  {user.role === 'admin' ? '🔑' : '🧑‍🏫'}
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--charcoal)' }}>{user.name}</span>
-                    {hasCtAssignment(user) && (
-                      <span style={{ background: '#e6f9ee', color: '#1a8a3c', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, border: '1px solid #a8e6c0' }}>
-                        📋 CT: {user.classTeacherClass} – {user.classTeacherSection}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)', marginTop: 1 }}>@{user.username}</div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => openEdit(user)} style={{ padding: '0.4rem 0.9rem', borderRadius: 8, border: '1.5px solid var(--sky-light)', background: 'white', fontFamily: 'Poppins', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 500 }}>✏️ Edit</button>
-                <button onClick={() => setDeleteConfirm(user)} style={{ padding: '0.4rem 0.9rem', borderRadius: 8, border: '1.5px solid #fde2e2', background: '#fff5f5', fontFamily: 'Poppins', fontSize: '0.78rem', cursor: 'pointer', color: '#c0392b' }}>🗑️</button>
-              </div>
+      {tab !== 'history' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {filtered.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--charcoal-light)', fontSize: '0.88rem' }}>
+              No {tab}s found. Click "+ Add User" to create one.
             </div>
-            {user.role === 'teacher' && user.assignedClasses?.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.8rem' }}>
-                {user.assignedClasses.map(cls => (
-                  <span key={cls._id} style={{ background: 'var(--sky-light)', color: 'var(--charcoal)', fontSize: '0.72rem', fontWeight: 500, padding: '3px 10px', borderRadius: 20 }}>
-                    {cls.name} {cls.section} — {cls.subject}
-                  </span>
-                ))}
+          )}
+          {filtered.map(user => (
+            <div key={user._id} style={{ background: 'white', borderRadius: 14, border: '1.5px solid var(--sky-light)', padding: '1rem 1.2rem', boxShadow: '0 2px 10px rgba(135,206,250,0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: hasCtAssignment(user) ? '#e6f9ee' : 'var(--sky-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                    {user.role === 'admin' ? '🔑' : '🧑‍🏫'}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--charcoal)' }}>{user.name}</span>
+                      {hasCtAssignment(user) && (
+                        <span style={{ background: '#e6f9ee', color: '#1a8a3c', fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 20, border: '1px solid #a8e6c0' }}>
+                          📋 CT: {user.classTeacherClass} – {user.classTeacherSection}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)', marginTop: 1 }}>@{user.username}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => openEdit(user)} style={{ padding: '0.4rem 0.9rem', borderRadius: 8, border: '1.5px solid var(--sky-light)', background: 'white', fontFamily: 'Poppins', fontSize: '0.78rem', cursor: 'pointer', fontWeight: 500 }}>✏️ Edit</button>
+                  <button onClick={() => setDeleteConfirm(user)} style={{ padding: '0.4rem 0.9rem', borderRadius: 8, border: '1.5px solid #fde2e2', background: '#fff5f5', fontFamily: 'Poppins', fontSize: '0.78rem', cursor: 'pointer', color: '#c0392b' }}>🗑️</button>
+                </div>
               </div>
-            )}
-          </div>
-        ))}
-      </div>
+              {user.role === 'teacher' && user.assignedClasses?.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.8rem' }}>
+                  {user.assignedClasses.map(cls => (
+                    <span key={cls._id} style={{ background: 'var(--sky-light)', color: 'var(--charcoal)', fontSize: '0.72rem', fontWeight: 500, padding: '3px 10px', borderRadius: 20 }}>
+                      {cls.name} {cls.section} — {cls.subject}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add/Edit Modal */}
       {showModal && (
@@ -202,7 +313,6 @@ export default function AdminUsersPage() {
             <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '1.5rem', color: 'var(--charcoal)' }}>
               {editing ? '✏️ Edit User' : '➕ Add New User'}
             </h3>
-
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               <div>
                 <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--charcoal)' }}>Full Name</label>
@@ -224,11 +334,8 @@ export default function AdminUsersPage() {
                   {ROLES.map(r => <option key={r} value={r}>{r.charAt(0).toUpperCase() + r.slice(1)}</option>)}
                 </select>
               </div>
-
-              {/* Teacher-only fields */}
               {form.role === 'teacher' && (
                 <>
-                  {/* Subject Classes */}
                   <div>
                     <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--charcoal)' }}>Assigned Subject Classes</label>
                     {allClasses.length === 0 ? (
@@ -249,8 +356,6 @@ export default function AdminUsersPage() {
                       </div>
                     )}
                   </div>
-
-                  {/* Class Teacher Assignment */}
                   <div style={{ borderRadius: 12, border: '1.5px solid var(--sky-light)', padding: '1rem', background: '#fafeff' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
                       <span style={{ fontSize: 16 }}>📋</span>
@@ -285,10 +390,7 @@ export default function AdminUsersPage() {
                 </>
               )}
             </div>
-
-            {error && (
-              <p style={{ color: '#c0392b', fontSize: '0.78rem', background: '#fff5f5', padding: '8px 12px', borderRadius: 8, marginTop: '1rem' }}>{error}</p>
-            )}
+            {error && <p style={{ color: '#c0392b', fontSize: '0.78rem', background: '#fff5f5', padding: '8px 12px', borderRadius: 8, marginTop: '1rem' }}>{error}</p>}
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1.5rem' }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '0.7rem', borderRadius: 10, border: '1.5px solid var(--sky-light)', background: 'white', fontFamily: 'Poppins', fontSize: '0.88rem', cursor: 'pointer' }}>Cancel</button>
               <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '0.7rem', borderRadius: 10, background: 'var(--sky)', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>
@@ -299,7 +401,6 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Delete Confirm */}
       {deleteConfirm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
           <div style={{ background: 'white', borderRadius: 18, padding: '2rem', width: '100%', maxWidth: 360, textAlign: 'center' }}>
