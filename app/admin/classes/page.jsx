@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react';
 import BackButton from '@/components/BackButton';
 
-const CLASS_NAMES = ['KG I','KG II','Class I','Class II','Class III','Class IV','Class V',
-  'Class VI','Class VII','Class VIII','Class IX','Class X'];
+const CLASS_NAMES = ['KG I', 'KG II', 'Class I', 'Class II', 'Class III', 'Class IV', 'Class V',
+  'Class VI', 'Class VII', 'Class VIII', 'Class IX', 'Class X'];
 const SECTIONS = ['A', 'B', 'C'];
-const SUBJECTS = ['English','Mizo','Hindi','Mathematics','Science','Social Science','EVS',
-  'IT','Moral Values','Art','Music'];
+const SUBJECTS = ['English', 'Mizo', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'EVS',
+  'IT', 'Moral Values', 'Art', 'Music'];
 const EMPTY = { name: 'Class VIII', section: 'A', subject: 'English', academicYear: '2026' };
 
 export default function AdminClassesPage() {
@@ -18,6 +18,7 @@ export default function AdminClassesPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [search, setSearch] = useState('');
 
   const fetchClasses = () =>
     fetch('/api/admin/classes').then(r => r.json()).then(data => {
@@ -58,17 +59,27 @@ export default function AdminClassesPage() {
     fontSize: '0.88rem', outline: 'none', marginTop: 4, background: 'white',
   };
 
-  const subjectIcons = { 'English':'📖', 'Mizo':'📝', 'Hindi':'📝','Mathematics':'🔢','Science':'🔬',
-    'Social Science':'🌍', 'EVS':'🌍', 'IT':'💻','Moral Values':'🙏','Art':'🎨','Music':'🎵' };
+  const subjectIcons = {
+    'English': '📖', 'Mizo': '📝', 'Hindi': '📝', 'Mathematics': '🔢', 'Science': '🔬',
+    'Social Science': '🌍', 'EVS': '🌍', 'IT': '💻', 'Moral Values': '🙏', 'Art': '🎨', 'Music': '🎵'
+  };
+
+  const filteredClasses = classes.filter(cls => 
+    cls.name.toLowerCase().includes(search.toLowerCase()) ||
+    cls.subject.toLowerCase().includes(search.toLowerCase()) || 
+    cls.section.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: 750, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between',
-        alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem' }}>
+      <div style={{
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.8rem'
+      }}>
         <div>
           <BackButton />
           <h2 style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--charcoal)' }}>
-            🏫 Class Management
+            Class Management
           </h2>
           <p style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)', marginTop: 2 }}>
             {classes.length} classes configured
@@ -79,6 +90,13 @@ export default function AdminClassesPage() {
           padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600,
           fontSize: '0.85rem', cursor: 'pointer',
         }}>+ Add Class</button>
+      </div>
+
+      {/* Search */}
+      <div style={{ marginBottom: '1.2rem' }}>
+        <input placeholder="Search class name, section, or subject..."
+          value={search} onChange={e => setSearch(e.target.value)}
+          style={{ ...inputStyle, marginTop: 0, width: '100%', maxWidth: 350 }} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
@@ -102,14 +120,26 @@ export default function AdminClassesPage() {
           </div>
         ))}
         {!initialLoading && classes.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '3rem',
+          <div style={{
+            textAlign: 'center', padding: '3rem',
             color: 'var(--charcoal-light)', fontSize: '0.88rem',
             background: 'white', borderRadius: 14,
-            border: '1.5px solid var(--sky-light)' }}>
+            border: '1.5px solid var(--sky-light)'
+          }}>
             No classes yet. Click "+ Add Class" to create one.
           </div>
         )}
-        {!initialLoading && classes.map((cls, i) => (
+        {!initialLoading && classes.length > 0 && filteredClasses.length === 0 && (
+          <div style={{
+            textAlign: 'center', padding: '3rem',
+            color: 'var(--charcoal-light)', fontSize: '0.88rem',
+            background: 'white', borderRadius: 14,
+            border: '1.5px solid var(--sky-light)'
+          }}>
+            No classes found matching "{search}".
+          </div>
+        )}
+        {!initialLoading && filteredClasses.map((cls, i) => (
           <div key={cls._id} style={{
             background: 'white', borderRadius: 12,
             border: '1.5px solid var(--sky-light)',
@@ -142,13 +172,13 @@ export default function AdminClassesPage() {
                 border: '1.5px solid var(--sky-light)',
                 background: 'white', fontFamily: 'Poppins',
                 fontSize: '0.78rem', cursor: 'pointer',
-              }}>✏️ Edit</button>
+              }}>Edit</button>
               <button onClick={() => setDeleteConfirm(cls)} style={{
                 padding: '4px 12px', borderRadius: 7,
                 border: '1.5px solid #fde2e2', background: '#fff5f5',
                 fontFamily: 'Poppins', fontSize: '0.78rem',
                 cursor: 'pointer', color: '#c0392b',
-              }}>🗑️</button>
+              }}>Delete</button>
             </div>
           </div>
         ))}
@@ -156,15 +186,21 @@ export default function AdminClassesPage() {
 
       {/* Modal */}
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem' }}>
-          <div style={{ background: 'white', borderRadius: 18, padding: '2rem',
+          zIndex: 1000, padding: '1rem'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 18, padding: '2rem',
             width: '100%', maxWidth: 400,
-            boxShadow: '0 8px 40px rgba(135,206,250,0.25)' }}>
-            <h3 style={{ fontWeight: 700, fontSize: '1.05rem',
-              marginBottom: '1.4rem', color: 'var(--charcoal)' }}>
-              {editing ? '✏️ Edit Class' : '➕ Add Class'}
+            boxShadow: '0 8px 40px rgba(135,206,250,0.25)'
+          }}>
+            <h3 style={{
+              fontWeight: 700, fontSize: '1.05rem',
+              marginBottom: '1.4rem', color: 'var(--charcoal)'
+            }}>
+              {editing ? 'Edit Class' : 'Add Class'}
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div style={{ display: 'flex', gap: '0.6rem' }}>
@@ -197,9 +233,11 @@ export default function AdminClassesPage() {
                   onChange={e => setForm({ ...form, academicYear: e.target.value })} />
               </div>
             </div>
-            {error && <p style={{ color: '#c0392b', fontSize: '0.78rem',
+            {error && <p style={{
+              color: '#c0392b', fontSize: '0.78rem',
               background: '#fff5f5', padding: '8px 12px',
-              borderRadius: 8, marginTop: '1rem' }}>{error}</p>}
+              borderRadius: 8, marginTop: '1rem'
+            }}>{error}</p>}
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1.5rem' }}>
               <button onClick={() => setShowModal(false)} style={{
                 flex: 1, padding: '0.7rem', borderRadius: 10,
@@ -219,11 +257,15 @@ export default function AdminClassesPage() {
       )}
 
       {deleteConfirm && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 1000, padding: '1rem' }}>
-          <div style={{ background: 'white', borderRadius: 18, padding: '2rem',
-            width: '100%', maxWidth: 340, textAlign: 'center' }}>
+          zIndex: 1000, padding: '1rem'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 18, padding: '2rem',
+            width: '100%', maxWidth: 340, textAlign: 'center'
+          }}>
             <div style={{ fontSize: 36, marginBottom: '0.7rem' }}>⚠️</div>
             <h3 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.4rem' }}>
               Delete this class?

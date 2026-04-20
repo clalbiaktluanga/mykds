@@ -86,15 +86,15 @@ function ClassViewContent() {
       setIsGeneratingCumulative(true);
       const res = await fetch(`/api/admin/class-report?class=${encodeURIComponent(className)}&section=${section}&cumulative=true`);
       const cumulativeData = await res.json();
-      
+
       generateCumulativeMergedReportCardsPDF(
-        cumulativeData.students, 
-        { 
-          className, 
-          section, 
-          academicYear: data.classes?.[0]?.academicYear || '2024-25', 
-          classTeacherName: cumulativeData.classTeacherName || data.classTeacherName 
-        }, 
+        cumulativeData.students,
+        {
+          className,
+          section,
+          academicYear: data.classes?.[0]?.academicYear || '2026',
+          classTeacherName: cumulativeData.classTeacherName || data.classTeacherName
+        },
         cumulativeData.subjects
       );
     } catch (e) {
@@ -116,8 +116,7 @@ function ClassViewContent() {
   };
   const getScoreColor = (score) => {
     if (score === null || score === undefined) return { bg: 'transparent', color: '#aaa' };
-    if (score >= 80) return { bg: '#e6f9ee', color: '#1a8a3c' };
-    if (score >= 60) return { bg: '#fff8e1', color: '#c67c00' };
+    if (score >= 40) return { bg: '#e6f9ee', color: '#1a8a3c' };
     return { bg: '#fdecea', color: '#c0392b' };
   };
 
@@ -130,7 +129,7 @@ function ClassViewContent() {
           <div>
             <BackButton />
             <h2 style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--charcoal)', margin: 0 }}>
-              🏫 {className} — Section {section}
+              {className} — Section {section}
             </h2>
             <p style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
               {data?.students?.length ?? 0} students · {data?.subjects?.length ?? 0} subjects
@@ -143,20 +142,20 @@ function ClassViewContent() {
                 onClick={() => exportToExcel({ students: data.students, subjects: data.subjects, tabLabel: currentTab.label, className, section })}
                 style={{ padding: '0.5rem 1.1rem', borderRadius: 10, background: '#1a8a3c', color: 'white', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                📥 Export Excel
+                Export Excel
               </button>
               <button
                 onClick={() => generateMergedReportCardsPDF(data.students, { className, section, academicYear: data.classes?.[0]?.academicYear || '2024-25', classTeacherName: data.classTeacherName }, data.subjects, currentTab.label, currentTab.type)}
                 style={{ padding: '0.5rem 1.1rem', borderRadius: 10, background: '#2b2b2b', color: 'white', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                📄 Generate All PDFs
+                Generate All PDFs
               </button>
               <button
                 onClick={handleGenerateFinalPDF}
                 disabled={isGeneratingCumulative}
                 style={{ padding: '0.5rem 1.1rem', borderRadius: 10, background: isGeneratingCumulative ? '#666' : '#d22b2b', color: 'white', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                🎓 {isGeneratingCumulative ? 'Generating...' : 'Generate Final PDF'}
+                {isGeneratingCumulative ? 'Generating...' : 'Generate Final PDF'}
               </button>
             </div>
           )}

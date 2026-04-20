@@ -42,7 +42,7 @@ function ProfileDrawer({ onClose }) {
       animation: 'kds-fade-up 0.2s ease both',
     }}>
       <div style={{ padding: '1rem 1.2rem 0.8rem', borderBottom: '1.5px solid var(--sky-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--charcoal)' }}>🕐 Login History</div>
+        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--charcoal)' }}>Login History</div>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--charcoal-light)', padding: 0 }}>✕</button>
       </div>
 

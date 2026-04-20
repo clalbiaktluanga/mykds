@@ -147,6 +147,7 @@ export default function AdminUsersPage() {
   const [tab, setTab] = useState('teacher');
   const [ctViewEnabled, setCtViewEnabled] = useState(false);
   const [settingLoading, setSettingLoading] = useState(false);
+  const [search, setSearch] = useState('');
 
   const fetchAll = async () => {
     const [u, c, s] = await Promise.all([
@@ -215,7 +216,11 @@ export default function AdminUsersPage() {
     await fetchAll(); setDeleteConfirm(null);
   };
 
-  const filtered = users.filter(u => tab === 'admin' ? u.role === 'admin' : tab === 'history' ? false : u.role === 'teacher');
+  const filtered = users.filter(u => tab === 'admin' ? u.role === 'admin' : tab === 'history' ? false : u.role === 'teacher')
+    .filter(u =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.username.toLowerCase().includes(search.toLowerCase())
+    );
   const hasCtAssignment = (user) => user.classTeacherClass && user.classTeacherSection;
 
   const inputStyle = {
@@ -264,23 +269,31 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.2rem', flexWrap: 'wrap' }}>
-        {[
-          { key: 'teacher', label: 'Teachers' },
-          { key: 'admin', label: 'Admins' },
-          { key: 'history', label: 'Session History' },
-        ].map(({ key, label }) => (
-          <button key={key} onClick={() => setTab(key)} style={{
-            padding: '0.45rem 1.1rem', borderRadius: 20,
-            background: tab === key ? 'var(--sky)' : 'white',
-            fontFamily: 'Poppins', fontWeight: tab === key ? 600 : 400, fontSize: '0.82rem',
-            cursor: 'pointer',
-            border: `1.5px solid ${tab === key ? 'var(--sky)' : 'var(--sky-light)'}`,
-          }}>
-            {label}{key !== 'history' && ` (${users.filter(u => u.role === key).length})`}
-          </button>
-        ))}
+      {/* Search and Tabs */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.2rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          {[
+            { key: 'teacher', label: 'Teachers' },
+            { key: 'admin', label: 'Admins' },
+            { key: 'history', label: 'Session History' },
+          ].map(({ key, label }) => (
+            <button key={key} onClick={() => setTab(key)} style={{
+              padding: '0.45rem 1.1rem', borderRadius: 20,
+              background: tab === key ? 'var(--sky)' : 'white',
+              fontFamily: 'Poppins', fontWeight: tab === key ? 600 : 400, fontSize: '0.82rem',
+              cursor: 'pointer',
+              border: `1.5px solid ${tab === key ? 'var(--sky)' : 'var(--sky-light)'}`,
+            }}>
+              {label}{key !== 'history' && ` (${users.filter(u => u.role === key).length})`}
+            </button>
+          ))}
+        </div>
+
+        {tab !== 'history' && (
+          <input placeholder="Search name or username..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            style={{ ...inputStyle, marginTop: 0, flex: 1, minWidth: 200, maxWidth: 300 }} />
+        )}
       </div>
 
       {/* History tab */}
@@ -306,9 +319,14 @@ export default function AdminUsersPage() {
               </div>
             </div>
           ))}
-          {!initialLoading && filtered.length === 0 && (
+          {!initialLoading && users.filter(u => tab === 'admin' ? u.role === 'admin' : u.role === 'teacher').length === 0 && (
             <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--charcoal-light)', fontSize: '0.88rem', background: 'white', borderRadius: 14, border: '1.5px solid var(--sky-light)' }}>
               No {tab}s found. Click "+ Add User" to create one.
+            </div>
+          )}
+          {!initialLoading && users.filter(u => tab === 'admin' ? u.role === 'admin' : u.role === 'teacher').length > 0 && filtered.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--charcoal-light)', fontSize: '0.88rem', background: 'white', borderRadius: 14, border: '1.5px solid var(--sky-light)' }}>
+              No {tab}s found matching "{search}".
             </div>
           )}
           {!initialLoading && filtered.map(user => (

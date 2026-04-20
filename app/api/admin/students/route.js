@@ -9,13 +9,13 @@ export async function GET() {
 
 export async function POST(req) {
   await connectDB();
-  const { rollNo, name, class: cls, section, academicYear } = await req.json();
+  const { rollNo, name, parentName, class: cls, section, academicYear } = await req.json();
   if (!rollNo || !name || !cls)
     return Response.json({ error: 'All fields required' }, { status: 400 });
   const student = await Student.create({
-    rollNo, name, class: cls,
+    rollNo, name, parentName, class: cls,
     section: section || 'A',
-    academicYear: academicYear || '2024-25',
+    academicYear: academicYear || '2026',
   });
   return Response.json(student, { status: 201 });
 }

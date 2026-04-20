@@ -35,8 +35,8 @@ function ClassPageInner() {
   }, [classId]);
 
   const ICONS = {
-    'English': '📖','Mizo': '📝', 'Hindi': '📝', 'Mathematics': '🔢', 'Science': '🔬',
-    'Social Science': '🌍','EVS': '🌍', 'IT': '💻','Moral Values': '🙏', 'Art': '🎨', 'Music': '🎵',
+    'English': '📖', 'Mizo': '📝', 'Hindi': '📝', 'Mathematics': '🔢', 'Science': '🔬',
+    'Social Science': '🌍', 'EVS': '🌍', 'IT': '💻', 'Moral Values': '🙏', 'Art': '🎨', 'Music': '🎵',
   };
 
   if (loading) return <PageLoader message="Loading class" />;
@@ -76,7 +76,7 @@ function ClassPageInner() {
                     fontSize: '0.68rem', fontWeight: 700,
                     padding: '2px 8px', borderRadius: 20,
                     border: '1px solid #a8e6c0',
-                  }}>📋 Class Teacher View</span>
+                  }}>Class Teacher View</span>
                 )}
               </div>
               <p style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)', margin: 0 }}>
@@ -109,7 +109,7 @@ function ClassPageInner() {
             fontSize: '0.82rem', color: '#7c5e00', marginBottom: '1.2rem',
             display: 'flex', alignItems: 'center', gap: '0.6rem',
           }}>
-            ⚠️ No students found for <strong>{classInfo?.name} Section {classInfo?.section}</strong>.
+            No students found for <strong>{classInfo?.name} Section {classInfo?.section}</strong>.
             Enroll students via Admin → Student Management.
           </div>
         )}

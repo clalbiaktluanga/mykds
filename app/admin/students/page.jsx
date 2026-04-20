@@ -1,11 +1,12 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import * as XLSX from 'xlsx';
 import BackButton from '@/components/BackButton';
 
 const CLASSES = ['KG I', 'KG II', 'Class I', 'Class II', 'Class III', 'Class IV', 'Class V',
   'Class VI', 'Class VII', 'Class VIII', 'Class IX', 'Class X'];
 const SECTIONS = ['A', 'B', 'C'];
-const EMPTY = { rollNo: '', name: '', class: 'Class VIII', section: 'A', academicYear: '2026' };
+const EMPTY = { rollNo: '', name: '', parentName: '', class: 'Class VIII', section: 'A', academicYear: '2026' };
 
 export default function AdminStudentsPage() {
   const [students, setStudents] = useState([]);
@@ -19,6 +20,67 @@ export default function AdminStudentsPage() {
   const [filterClass, setFilterClass] = useState('All');
   const [filterSection, setFilterSection] = useState('All');
   const [search, setSearch] = useState('');
+
+  const [showImport, setShowImport] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState('');
+  const [importSuccess, setImportSuccess] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImportLoading(true);
+    setImportError('');
+    setImportSuccess('');
+
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data, { type: 'array' });
+      const worksheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[worksheetName];
+      const json = XLSX.utils.sheet_to_json(worksheet);
+
+      const mappedStudents = json.map(row => ({
+        rollNo: row['Roll No'] || row['rollNo'] || String(row['roll'] || ''),
+        name: row['Name'] || row['name'] || '',
+        parentName: row['Parent Name'] || row["Father's Name"] || row['parentName'] || '',
+        class: row['Class'] || row['class'] || (filterClass !== 'All' ? filterClass : 'Class VIII'),
+        section: row['Section'] || row['section'] || (filterSection !== 'All' ? filterSection : 'A'),
+        academicYear: row['Academic Year'] || row['Year'] || row['academicYear'] || '2026',
+      }));
+
+      const validStudents = mappedStudents.filter(s => s.rollNo && s.name && s.class);
+
+      if (validStudents.length === 0) {
+        setImportError('No valid students found. Ensure columns are named Roll No, Name, Class.');
+        setImportLoading(false);
+        return;
+      }
+
+      const res = await fetch('/api/admin/students/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(validStudents),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        setImportError(result.error || 'Failed to import');
+      } else {
+        setImportSuccess(`Successfully imported/updated ${result.importedCount} students.`);
+        await fetchStudents();
+        setTimeout(() => setShowImport(false), 2000);
+      }
+    } catch (err) {
+      setImportError('Failed to parse file: ' + err.message);
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setImportLoading(false);
+    }
+  };
 
   const fetchStudents = () =>
     fetch('/api/admin/students').then(r => r.json()).then(data => {
@@ -35,7 +97,7 @@ export default function AdminStudentsPage() {
   const openEdit = (s) => {
     setEditing(s);
     setForm({
-      rollNo: s.rollNo, name: s.name, class: s.class,
+      rollNo: s.rollNo, name: s.name, parentName: s.parentName || '', class: s.class,
       section: s.section || 'A', academicYear: s.academicYear
     });
     setError(''); setShowModal(true);
@@ -94,11 +156,35 @@ export default function AdminStudentsPage() {
             {students.length} students enrolled
           </p>
         </div>
-        <button onClick={openAdd} style={{
-          background: 'var(--sky)', border: 'none', borderRadius: 10,
-          padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600,
-          fontSize: '0.85rem', cursor: 'pointer',
-        }}>+ Add Student</button>
+        <div style={{ position: 'relative' }}>
+          <button onClick={() => setMenuOpen(!menuOpen)} style={{
+            background: 'var(--sky)', border: 'none', borderRadius: 10,
+            padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600,
+            fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
+          }}>
+            + Add Student ▼
+          </button>
+
+          {menuOpen && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+              background: 'white', borderRadius: 12, border: '1.5px solid var(--sky-light)',
+              boxShadow: '0 8px 24px rgba(135,206,250,0.15)', zIndex: 50,
+              overflow: 'hidden', minWidth: 170, display: 'flex', flexDirection: 'column'
+            }}>
+              <button onClick={() => { setMenuOpen(false); openAdd(); }} style={{
+                background: 'transparent', border: 'none', padding: '0.8rem 1.1rem',
+                textAlign: 'left', fontFamily: 'Poppins', fontSize: '0.85rem',
+                cursor: 'pointer', borderBottom: '1.5px solid var(--sky-light)'
+              }}>➕ Add Manually</button>
+              <button onClick={() => { setMenuOpen(false); setShowImport(true); setImportSuccess(''); setImportError(''); }} style={{
+                background: 'transparent', border: 'none', padding: '0.8rem 1.1rem',
+                textAlign: 'left', fontFamily: 'Poppins', fontSize: '0.85rem',
+                cursor: 'pointer'
+              }}>📁 Import Excel / CSV</button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -160,7 +246,14 @@ export default function AdminStudentsPage() {
             {!initialLoading && filtered.map((s, i) => (
               <tr key={s._id} style={{ background: i % 2 === 0 ? 'white' : '#fafeff' }}>
                 <td style={{ padding: '0.6rem 0.9rem', fontSize: '0.85rem', fontWeight: 600 }}>{s.rollNo}</td>
-                <td style={{ padding: '0.6rem 0.9rem', fontSize: '0.85rem', fontWeight: 500 }}>{s.name}</td>
+                <td style={{ padding: '0.6rem 0.9rem', fontSize: '0.85rem' }}>
+                  <div style={{ fontWeight: 600, color: 'var(--charcoal)' }}>{s.name}</div>
+                  {s.parentName && (
+                    <div style={{ fontSize: '0.72rem', color: 'var(--charcoal-light)', marginTop: 2 }}>
+                      c/o {s.parentName}
+                    </div>
+                  )}
+                </td>
                 <td style={{ padding: '0.6rem 0.9rem', fontSize: '0.82rem' }}>{s.class}</td>
                 <td style={{ padding: '0.6rem 0.9rem' }}>
                   <span style={{
@@ -226,6 +319,11 @@ export default function AdminStudentsPage() {
                 <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Full Name</label>
                 <input style={inputStyle} placeholder="e.g. John Doe"
                   value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Father's / Parent's Name</label>
+                <input style={inputStyle} placeholder="e.g. Robert Doe"
+                  value={form.parentName || ''} onChange={e => setForm({ ...form, parentName: e.target.value })} />
               </div>
               {/* Class + Section side by side */}
               <div style={{ display: 'flex', gap: '0.6rem' }}>
@@ -304,6 +402,73 @@ export default function AdminStudentsPage() {
                 fontFamily: 'Poppins', fontWeight: 600,
                 fontSize: '0.85rem', cursor: 'pointer',
               }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      {showImport && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '1rem'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 18, padding: '2rem',
+            width: '100%', maxWidth: 480,
+            boxShadow: '0 8px 40px rgba(135,206,250,0.25)'
+          }}>
+            <h3 style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.5rem', color: 'var(--charcoal)' }}>
+              Bulk Import Students
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
+              Upload an Excel (.xlsx) or CSV file. The file should have columns named:
+              <br /><strong>Roll No, Name, Parent Name, Class, Section, Academic Year</strong>.
+              <br /><br />
+              <span style={{ color: '#c0392b', fontWeight: 600 }}>Note:</span> Existing students with the same Roll No and Class will be overwritten!
+            </p>
+
+            <div style={{
+              border: '2px dashed var(--sky-light)', borderRadius: 12, padding: '2rem',
+              textAlign: 'center', background: '#fafeff', marginBottom: '1rem'
+            }}>
+              <input
+                type="file"
+                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                onChange={handleImport}
+                ref={fileInputRef}
+                style={{ display: 'none' }}
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" style={{
+                background: 'var(--sky)', border: 'none', borderRadius: 8,
+                padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600,
+                fontSize: '0.85rem', cursor: 'pointer', display: 'inline-block',
+                pointerEvents: importLoading ? 'none' : 'auto',
+                opacity: importLoading ? 0.7 : 1
+              }}>
+                {importLoading ? 'Processing...' : 'Select File'}
+              </label>
+            </div>
+
+            {importError && (
+              <div style={{ color: '#c0392b', fontSize: '0.8rem', background: '#fff5f5', padding: '10px 12px', borderRadius: 8, marginBottom: '1rem' }}>
+                {importError}
+              </div>
+            )}
+            {importSuccess && (
+              <div style={{ color: '#1a8a3c', fontSize: '0.8rem', background: '#e6f9ee', padding: '10px 12px', borderRadius: 8, marginBottom: '1rem' }}>
+                {importSuccess}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.7rem' }}>
+              <button onClick={() => setShowImport(false)} disabled={importLoading} style={{
+                flex: 1, padding: '0.7rem', borderRadius: 10,
+                border: '1.5px solid var(--sky-light)', background: 'white',
+                fontFamily: 'Poppins', fontSize: '0.88rem', cursor: 'pointer',
+              }}>Close</button>
             </div>
           </div>
         </div>

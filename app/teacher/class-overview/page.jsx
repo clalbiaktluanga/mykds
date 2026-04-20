@@ -83,15 +83,15 @@ function TeacherClassOverviewContent() {
       setIsGeneratingCumulative(true);
       const res = await fetch(`/api/teacher/class-report?class=${encodeURIComponent(className)}&section=${section}&cumulative=true`);
       const cumulativeData = await res.json();
-      
+
       generateCumulativeMergedReportCardsPDF(
-        cumulativeData.students, 
-        { 
-          className, 
-          section, 
-          academicYear: data.classes?.[0]?.academicYear || '2024-25', 
-          classTeacherName: cumulativeData.classTeacherName || data.classTeacherName 
-        }, 
+        cumulativeData.students,
+        {
+          className,
+          section,
+          academicYear: data.classes?.[0]?.academicYear || '2024-25',
+          classTeacherName: cumulativeData.classTeacherName || data.classTeacherName
+        },
         cumulativeData.subjects
       );
     } catch (e) {
@@ -113,8 +113,7 @@ function TeacherClassOverviewContent() {
   };
   const getScoreColor = (score) => {
     if (score === null || score === undefined) return { bg: 'transparent', color: '#aaa' };
-    if (score >= 80) return { bg: '#e6f9ee', color: '#1a8a3c' };
-    if (score >= 60) return { bg: '#fff8e1', color: '#c67c00' };
+    if (score >= 40) return { bg: '#e6f9ee', color: '#1a8a3c' };
     return { bg: '#fdecea', color: '#c0392b' };
   };
 
@@ -125,7 +124,7 @@ function TeacherClassOverviewContent() {
           <div>
             <BackButton />
             <h2 style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--charcoal)', margin: 0 }}>
-              🏫 {className} — Section {section}
+              {className} - Section {section}
             </h2>
             <p style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
               {data?.students?.length ?? 0} students · {data?.subjects?.length ?? 0} subjects
@@ -137,20 +136,20 @@ function TeacherClassOverviewContent() {
                 onClick={() => exportToExcel({ students: data.students, subjects: data.subjects, tabLabel: currentTab.label, className, section })}
                 style={{ padding: '0.5rem 1.1rem', borderRadius: 10, background: '#1a8a3c', color: 'white', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                📥 Export Excel
+                Export Excel
               </button>
               <button
                 onClick={() => generateMergedReportCardsPDF(data.students, { className, section, academicYear: data.classes?.[0]?.academicYear || '2024-25', classTeacherName: data.classTeacherName }, data.subjects, currentTab.label, currentTab.type)}
                 style={{ padding: '0.5rem 1.1rem', borderRadius: 10, background: '#2b2b2b', color: 'white', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                📄 Generate All PDFs
+                Generate All PDFs
               </button>
               <button
                 onClick={handleGenerateFinalPDF}
                 disabled={isGeneratingCumulative}
                 style={{ padding: '0.5rem 1.1rem', borderRadius: 10, background: isGeneratingCumulative ? '#666' : '#d22b2b', color: 'white', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.82rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                🎓 {isGeneratingCumulative ? 'Generating...' : 'Generate Final PDF'}
+                {isGeneratingCumulative ? 'Generating...' : 'Generate Final PDF'}
               </button>
             </div>
           )}
@@ -194,7 +193,7 @@ function TeacherClassOverviewContent() {
                     <th key={subject} style={{ ...thStyle, textAlign: 'center', minWidth: 110 }}>{subject}</th>
                   ))}
                   <th style={{ ...thStyle, textAlign: 'center', minWidth: 90, background: '#d0ecfd' }}>Total</th>
-                  <th style={{ ...thStyle, textAlign: 'center', minWidth: 70 }}>Action</th>
+                  <th style={{ ...thStyle, textAlign: 'center', minWidth: 70 }}>Report Card</th>
                 </tr>
               </thead>
               <tbody>
@@ -226,11 +225,11 @@ function TeacherClassOverviewContent() {
                       </td>
                       <td style={{ ...tdStyle, textAlign: 'center' }}>
                         <button
-                          onClick={() => generateReportCardPDF(student, { className, section, academicYear: data.classes?.[0]?.academicYear || '2024-25', classTeacherName: data.classTeacherName }, data.subjects, currentTab.label, currentTab.type)}
+                          onClick={() => generateReportCardPDF(student, { className, section, academicYear: data.classes?.[0]?.academicYear || '2026', classTeacherName: data.classTeacherName }, data.subjects, currentTab.label, currentTab.type)}
                           title="Download Report Card"
                           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: '4px' }}
                         >
-                          📄
+                          📥
                         </button>
                       </td>
                     </tr>
@@ -242,9 +241,8 @@ function TeacherClassOverviewContent() {
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap', fontSize: '0.75rem' }}>
             {[
-              { label: '≥ 80 — Good', bg: '#e6f9ee', color: '#1a8a3c' },
-              { label: '60–79 — Average', bg: '#fff8e1', color: '#c67c00' },
-              { label: '< 60 — Needs attention', bg: '#fdecea', color: '#c0392b' },
+              { label: '≥40 - Pass', bg: '#e6f9ee', color: '#1a8a3c' },
+              { label: '<40 - Fail', bg: '#fdecea', color: '#c0392b' },
             ].map(l => (
               <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ background: l.bg, color: l.color, borderRadius: 6, padding: '2px 8px', fontWeight: 600 }}>{l.label.split(' — ')[0]}</span>

@@ -46,8 +46,8 @@ export default function TeacherDashboard() {
   }, []);
 
   const ICONS = {
-    'English':'📖', 'Mizo':'📝', 'Hindi':'📝','Mathematics':'🔢','Science':'🔬',
-    'Social Science':'🌍', 'EVS':'🌍', 'IT':'💻','Moral Values':'🙏','Art':'🎨','Music':'🎵'
+    'English': '📖', 'Mizo': '📝', 'Hindi': '📝', 'Mathematics': '🔢', 'Science': '🔬',
+    'Social Science': '🌍', 'EVS': '🌍', 'IT': '💻', 'Moral Values': '🙏', 'Art': '🎨', 'Music': '🎵'
   };
 
   const ctEnabled = ctData?.enabled && ctData?.assigned;
@@ -115,7 +115,7 @@ export default function TeacherDashboard() {
         {/* Welcome */}
         <div style={{ marginBottom: '2rem' }}>
           <h2 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--charcoal)' }}>
-            {loading ? 'Welcome 👋' : `Welcome, ${session?.user?.name ?? 'Teacher'} 👋`}
+            {loading ? 'Welcome ' : `Welcome, ${session?.user?.name ?? 'Teacher'}`}
           </h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginTop: 4 }}>
             Your assigned classes this year
@@ -131,10 +131,9 @@ export default function TeacherDashboard() {
                 padding: '0.5rem 1rem',
                 display: 'flex', alignItems: 'center', gap: '0.5rem',
               }}>
-                <span style={{ fontSize: 18 }}>📋</span>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a8a3c' }}>
-                    Class Teacher — {ctData.classTeacherClass}, Section {ctData.classTeacherSection}
+                    Class Teacher - {ctData.classTeacherClass}, Section {ctData.classTeacherSection}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: '#2ecc71', marginTop: 1 }}>
                     View all subjects · Read-only
@@ -200,7 +199,6 @@ export default function TeacherDashboard() {
         <div>
           {ctEnabled && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-              <span style={{ fontSize: 18 }}>🧑‍🏫</span>
               <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--charcoal)' }}>
                 My Subject Classes
               </div>

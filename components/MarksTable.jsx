@@ -22,7 +22,7 @@ export default function MarksTable({ students, classId, type }) {
         data.forEach(m => { map[`${m.student}_${m.index}`] = m.marksObtained; });
         setMarks(map);
       })
-      .catch(() => {});
+      .catch(() => { });
   };
 
   // Load logs
@@ -30,7 +30,7 @@ export default function MarksTable({ students, classId, type }) {
     fetch(`/api/marks/logs?classId=${classId}&type=${type}`)
       .then(r => r.json())
       .then(setLogs)
-      .catch(() => {});
+      .catch(() => { });
   };
 
   useEffect(() => {
@@ -141,7 +141,7 @@ export default function MarksTable({ students, classId, type }) {
                 padding: '3px 10px', borderRadius: 20,
                 border: '1px solid #ffe58f',
               }}>
-                ✏️ Editing
+                Editing
               </span>
             )}
             {saveMsg && (
@@ -182,7 +182,7 @@ export default function MarksTable({ students, classId, type }) {
                 fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 5,
               }}>
-                ✏️ Edit
+                Edit
               </button>
             ) : (
               <>
@@ -203,7 +203,7 @@ export default function MarksTable({ students, classId, type }) {
                   fontSize: '0.8rem', cursor: saving ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', gap: 5,
                 }}>
-                  {saving ? 'Saving...' : '💾 Save Changes'}
+                  {saving ? 'Saving...' : 'Save Changes'}
                 </button>
               </>
             )}
@@ -346,8 +346,8 @@ export default function MarksTable({ students, classId, type }) {
                       }}>📝</span>
                       <div>
                         <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--charcoal)' }}>
-                            {log.changes?.length ?? 0} change{log.changes?.length !== 1 ? 's' : ''} in {label} {log.index}
-                            </div>
+                          {log.changes?.length ?? 0} change{log.changes?.length !== 1 ? 's' : ''} in {label} {log.index}
+                        </div>
 
                         <div style={{ fontSize: '0.72rem', color: 'var(--charcoal-light)', marginTop: 1 }}>
                           by {log.editedByName} · {formatLogDate(log.editedAt)}
