@@ -39,7 +39,7 @@ function NavbarWrapper() {
   // Not logged in
   if (!session) return null;
 
-  return <Navbar role={session.user?.role} name={session.user?.name} />;
+  return <Navbar role={session.user?.role} name={session.user?.name} username={session.user?.username} />;
 }
 
 export default function Providers({ children }) {

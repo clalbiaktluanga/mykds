@@ -240,7 +240,7 @@ export default function AdminUsersPage() {
           <p style={{ fontSize: '0.78rem', color: 'var(--charcoal-light)', marginTop: 2 }}>Add, edit or remove staff accounts</p>
         </div>
         {tab !== 'history' && (
-          <button onClick={openAdd} style={{ background: 'var(--sky)', border: 'none', borderRadius: 10, padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', color: 'var(--charcoal)' }}>+ Add User</button>
+          <button onClick={openAdd} style={{ background: 'var(--sky)', border: 'none', borderRadius: 10, padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer', color: 'white' }}>+ Add User</button>
         )}
       </div>
 
@@ -280,6 +280,7 @@ export default function AdminUsersPage() {
             <button key={key} onClick={() => setTab(key)} style={{
               padding: '0.45rem 1.1rem', borderRadius: 20,
               background: tab === key ? 'var(--sky)' : 'white',
+              color: tab === key ? 'white' : 'var(--charcoal-light)',
               fontFamily: 'Poppins', fontWeight: tab === key ? 600 : 400, fontSize: '0.82rem',
               cursor: 'pointer',
               border: `1.5px solid ${tab === key ? 'var(--sky)' : 'var(--sky-light)'}`,
@@ -453,7 +454,7 @@ export default function AdminUsersPage() {
             {error && <p style={{ color: '#c0392b', fontSize: '0.78rem', background: '#fff5f5', padding: '8px 12px', borderRadius: 8, marginTop: '1rem' }}>{error}</p>}
             <div style={{ display: 'flex', gap: '0.7rem', marginTop: '1.5rem' }}>
               <button onClick={() => setShowModal(false)} style={{ flex: 1, padding: '0.7rem', borderRadius: 10, border: '1.5px solid var(--sky-light)', background: 'white', fontFamily: 'Poppins', fontSize: '0.88rem', cursor: 'pointer' }}>Cancel</button>
-              <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '0.7rem', borderRadius: 10, background: 'var(--sky)', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' }}>
+              <button onClick={handleSubmit} disabled={loading} style={{ flex: 2, padding: '0.7rem', borderRadius: 10, background: 'var(--sky)', border: 'none', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', color: 'white' }}>
                 {loading ? 'Saving...' : editing ? 'Save Changes' : 'Create User'}
               </button>
             </div>

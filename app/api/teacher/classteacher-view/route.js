@@ -4,6 +4,7 @@ import Class from '@/models/Class';
 import Setting from '@/models/Settings';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { sortClassesBySubject } from '@/lib/subjects';
 
 export async function GET() {
   await connectDB();
@@ -21,10 +22,12 @@ export async function GET() {
     return Response.json({ enabled: true, assigned: false });
   }
 
-  const classes = await Class.find({
+  const unsortedClasses = await Class.find({
     name: user.classTeacherClass,
     section: user.classTeacherSection,
-  }).sort({ subject: 1 });
+  });
+  
+  const classes = sortClassesBySubject(unsortedClasses);
 
   return Response.json({
     enabled: true,

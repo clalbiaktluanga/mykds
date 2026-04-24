@@ -6,6 +6,7 @@ import User from '@/models/User';
 import Setting from '@/models/Settings';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { sortClassesBySubject } from '@/lib/subjects';
 
 export async function GET(req) {
   await connectDB();
@@ -40,7 +41,8 @@ export async function GET(req) {
   }
 
   // Get all classes for this class+section (one per subject)
-  const classes = await Class.find({ name: className, section });
+  const unsortedClasses = await Class.find({ name: className, section });
+  const classes = sortClassesBySubject(unsortedClasses);
 
   // Get all students in this class+section
   const students = await Student.find({ class: className, section })

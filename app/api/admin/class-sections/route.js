@@ -1,5 +1,6 @@
 import { connectDB } from '@/lib/mongodb';
 import Class from '@/models/Class';
+import { sortClassesBySubject } from '@/lib/subjects';
 
 export async function GET() {
   await connectDB();
@@ -26,5 +27,10 @@ export async function GET() {
     grouped[key].classIds.push(cls._id);
   });
 
-  return Response.json(Object.values(grouped));
+  const result = Object.values(grouped).map(g => ({
+    ...g,
+    subjects: sortClassesBySubject(g.subjects)
+  }));
+
+  return Response.json(result);
 }

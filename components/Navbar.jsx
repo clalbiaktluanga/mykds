@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 
-function ProfileDrawer({ onClose }) {
+function ProfileDrawer({ onClose, role, name, username }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const drawerRef = useRef(null);
@@ -41,12 +41,28 @@ function ProfileDrawer({ onClose }) {
       maxHeight: '75vh', display: 'flex', flexDirection: 'column',
       animation: 'kds-fade-up 0.2s ease both',
     }}>
-      <div style={{ padding: '1rem 1.2rem 0.8rem', borderBottom: '1.5px solid var(--sky-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--charcoal)' }}>Login History</div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--charcoal-light)', padding: 0 }}>✕</button>
+      <div style={{ padding: '1rem 1.2rem 0.8rem', borderBottom: '1.5px solid var(--sky-light)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--charcoal)', marginBottom: '0.2rem' }}>{name || 'User'}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--charcoal-light)' }}>@{username}</div>
+              <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--charcoal)', textTransform: 'capitalize', background: 'var(--sky-light)', padding: '2px 8px', borderRadius: 12, display: 'inline-block' }}>{role}</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--charcoal-light)', padding: 0, alignSelf: 'flex-start' }}>✕</button>
+        </div>
+
+        <a href="https://link.kidsdenschool.in/u1T4boZT" style={{ display: 'block', width: '100%', padding: '0.6rem', borderRadius: 8, background: '#f0fbff', border: '1.5px solid var(--sky)', color: 'var(--sky)', fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer', textAlign: 'center', textDecoration: 'none' }}>
+          Contact Support
+        </a>
       </div>
 
-      <div style={{ overflowY: 'auto', flex: 1, padding: '0.6rem 0' }}>
+      <div style={{ padding: '1rem 1.2rem 0.2rem', fontWeight: 700, fontSize: '0.85rem', color: 'var(--charcoal-light)' }}>
+        Login History
+      </div>
+
+      <div style={{ overflowY: 'auto', flex: 1, padding: '0.4rem 0 0.6rem' }}>
         {loading && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--charcoal-light)', fontSize: '0.82rem' }}>Loading...</div>}
         {!loading && history.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--charcoal-light)', fontSize: '0.82rem' }}>No login history yet.</div>}
         {!loading && history.map((entry, i) => (
@@ -74,13 +90,27 @@ function ProfileDrawer({ onClose }) {
   );
 }
 
-export default function Navbar({ role, name }) {
+export default function Navbar({ role, name, username }) {
   const router = useRouter();
   const [showDrawer, setShowDrawer] = useState(false);
 
-  const initials = name
-    ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
+  const getInitials = (fullName) => {
+    if (!fullName) return '?';
+    const salutations = ['sir', 'miss', 'ma\'am', 'maam', 'mr', 'mrs', 'ms', 'dr', 'prof'];
+    const words = fullName.trim().split(/\s+/).filter(Boolean);
+    if (words.length === 0) return '?';
+
+    const isSalutation = salutations.includes(words[0].toLowerCase().replace(/\.$/, ''));
+    let targetWords = words;
+
+    if (isSalutation && words.length > 2) {
+      targetWords = words.slice(1);
+    }
+
+    return targetWords.map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const initials = getInitials(name);
 
   return (
     <>
@@ -122,7 +152,7 @@ export default function Navbar({ role, name }) {
           {name && <span className="kds-user-name" style={{ fontSize: '0.8rem', fontWeight: 500, color: 'var(--charcoal-light)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>}
 
           {/* Profile avatar */}
-          <button className="kds-avatar" onClick={() => setShowDrawer(p => !p)} title="View login history" style={{ width: 36, height: 36, borderRadius: '50%', background: showDrawer ? 'var(--sky)' : 'var(--sky-light)', border: `2px solid ${showDrawer ? '#4285F4' : 'var(--sky-light)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--charcoal)', cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0 }}>
+          <button className="kds-avatar" onClick={() => setShowDrawer(p => !p)} title="View profile and login history" style={{ width: 36, height: 36, borderRadius: '50%', background: showDrawer ? '#e6c700' : '#FFDD00', border: `2px solid ${showDrawer ? '#e6c700' : '#FFDD00'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: 700, color: 'var(--charcoal)', cursor: 'pointer', transition: 'all 0.15s', flexShrink: 0 }}>
             {initials}
           </button>
 
@@ -132,7 +162,7 @@ export default function Navbar({ role, name }) {
         </div>
       </nav>
 
-      {showDrawer && <ProfileDrawer onClose={() => setShowDrawer(false)} />}
+      {showDrawer && <ProfileDrawer onClose={() => setShowDrawer(false)} role={role} name={name} username={username} />}
     </>
   );
 }

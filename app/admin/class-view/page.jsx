@@ -167,7 +167,7 @@ function ClassViewContent() {
         <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--charcoal-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Class Tests</div>
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
           {TEST_TABS.filter(t => t.type === 'classtest').map((tab, i) => (
-            <button key={i} onClick={() => setActiveTab(i)} style={{ padding: '0.4rem 1rem', borderRadius: 20, background: activeTab === i ? 'var(--sky)' : 'white', fontFamily: 'Poppins', fontWeight: activeTab === i ? 600 : 400, fontSize: '0.78rem', cursor: 'pointer', border: `1.5px solid ${activeTab === i ? 'var(--sky)' : 'var(--sky-light)'}` }}>{tab.label}</button>
+            <button key={i} onClick={() => setActiveTab(i)} style={{ padding: '0.4rem 1rem', borderRadius: 20, background: activeTab === i ? 'var(--sky)' : 'white', color: activeTab === i ? 'white' : 'var(--charcoal)', fontFamily: 'Poppins', fontWeight: activeTab === i ? 600 : 400, fontSize: '0.78rem', cursor: 'pointer', border: `1.5px solid ${activeTab === i ? 'var(--sky)' : 'var(--sky-light)'}` }}>{tab.label}</button>
           ))}
         </div>
         <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--charcoal-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.4rem' }}>Exam / Term Marks</div>

@@ -3,6 +3,7 @@ import Class from '@/models/Class';
 import Student from '@/models/Student';
 import Mark from '@/models/Mark';
 import User from '@/models/User';
+import { sortClassesBySubject } from '@/lib/subjects';
 
 export async function GET(req) {
   await connectDB();
@@ -19,7 +20,8 @@ export async function GET(req) {
     return Response.json({ error: 'Missing params' }, { status: 400 });
 
   // Get all classes for this class+section (one per subject)
-  const classes = await Class.find({ name: className, section });
+  const unsortedClasses = await Class.find({ name: className, section });
+  const classes = sortClassesBySubject(unsortedClasses);
 
   // Get all students in this class+section
   const students = await Student.find({ class: className, section })

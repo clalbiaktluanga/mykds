@@ -1,9 +1,9 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 
-export default function MarksTable({ students, classId, type }) {
+export default function MarksTable({ students, classId, type, classInfo }) {
   const [marks, setMarks] = useState({});
-  const [editMode, setEditMode] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
   const [draftMarks, setDraftMarks] = useState({});
   const [numTests, setNumTests] = useState(3);
   const [saving, setSaving] = useState(false);
@@ -12,6 +12,13 @@ export default function MarksTable({ students, classId, type }) {
   const [showLogs, setShowLogs] = useState(false);
   const [activeLogIndex, setActiveLogIndex] = useState(null);
   const label = type === 'classtest' ? 'Test' : 'Term';
+
+  useEffect(() => {
+    if (classInfo) {
+      if (type === 'classtest') setNumTests(classInfo.tests || 5);
+      else setNumTests(classInfo.terms || 3);
+    }
+  }, [classInfo, type]);
 
   // Load marks
   const loadMarks = () => {
@@ -38,16 +45,16 @@ export default function MarksTable({ students, classId, type }) {
   }, [classId, type]);
 
   // Enter edit mode — clone current marks into draft
-  const handleEdit = () => {
+  const handleEdit = (index) => {
     setDraftMarks({ ...marks });
-    setEditMode(true);
+    setEditIndex(index);
     setSaveMsg('');
   };
 
   // Cancel edit
   const handleCancel = () => {
     setDraftMarks({});
-    setEditMode(false);
+    setEditIndex(null);
     setSaveMsg('');
   };
 
@@ -57,39 +64,33 @@ export default function MarksTable({ students, classId, type }) {
     setSaveMsg('');
 
     const entries = [];
-    for (let i = 1; i <= numTests; i++) {
-      for (const s of students) {
-        const key = `${s._id}_${i}`;
-        const oldValue = marks[key] ?? null;
-        const newValue = draftMarks[key] !== undefined
-          ? (draftMarks[key] === '' ? null : Number(draftMarks[key]))
-          : oldValue;
+    for (const s of students) {
+      const key = `${s._id}_${editIndex}`;
+      const oldValue = marks[key] ?? null;
+      const newValue = draftMarks[key] !== undefined
+        ? (draftMarks[key] === '' ? null : Number(draftMarks[key]))
+        : oldValue;
 
-        entries.push({
-          studentId: s._id,
-          studentName: s.name,
-          rollNo: s.rollNo,
-          oldValue,
-          newValue,
-          index: i,
-        });
-      }
-    }
-
-    // Group by index and save
-    for (let i = 1; i <= numTests; i++) {
-      const indexEntries = entries.filter(e => e.index === i);
-      await fetch('/api/marks', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ classId, type, index: i, entries: indexEntries }),
+      entries.push({
+        studentId: s._id,
+        studentName: s.name,
+        rollNo: s.rollNo,
+        oldValue,
+        newValue,
+        index: editIndex,
       });
     }
+
+    await fetch('/api/marks', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ classId, type, index: editIndex, entries }),
+    });
 
     // Refresh marks and logs
     loadMarks();
     loadLogs();
-    setEditMode(false);
+    setEditIndex(null);
     setDraftMarks({});
     setSaving(false);
     setSaveMsg(`✓ Saved at ${new Date().toLocaleTimeString()}`);
@@ -134,14 +135,14 @@ export default function MarksTable({ students, classId, type }) {
               {label} Marks
             </span>
             {/* Edit mode indicator */}
-            {editMode && (
+            {editIndex !== null && (
               <span style={{
                 background: '#fff8e1', color: '#c67c00',
                 fontSize: '0.72rem', fontWeight: 600,
                 padding: '3px 10px', borderRadius: 20,
                 border: '1px solid #ffe58f',
               }}>
-                Editing
+                Editing {label} {editIndex}
               </span>
             )}
             {saveMsg && (
@@ -156,35 +157,8 @@ export default function MarksTable({ students, classId, type }) {
           </div>
 
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            {/* Column count — only when not editing */}
-            {!editMode && (
-              <>
-                <span style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)' }}>
-                  Columns:
-                </span>
-                {[3, 5, 8].map(n => (
-                  <button key={n} onClick={() => setNumTests(n)} style={{
-                    padding: '2px 10px', borderRadius: 20,
-                    border: '1.5px solid var(--sky)',
-                    background: numTests === n ? 'var(--sky)' : 'white',
-                    fontFamily: 'Poppins', fontSize: '0.75rem', cursor: 'pointer',
-                  }}>{n}</button>
-                ))}
-              </>
-            )}
-
             {/* Action buttons */}
-            {!editMode ? (
-              <button onClick={handleEdit} style={{
-                padding: '0.4rem 1.1rem', borderRadius: 8,
-                background: 'var(--charcoal)', color: 'white',
-                border: 'none', fontFamily: 'Poppins',
-                fontWeight: 600, fontSize: '0.8rem', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}>
-                Edit
-              </button>
-            ) : (
+            {editIndex !== null && (
               <>
                 <button onClick={handleCancel} style={{
                   padding: '0.4rem 1rem', borderRadius: 8,
@@ -220,11 +194,38 @@ export default function MarksTable({ students, classId, type }) {
               <tr>
                 <th style={thStyle}>Roll No</th>
                 <th style={thStyle}>Student Name</th>
-                {Array.from({ length: numTests }, (_, i) => (
-                  <th key={i} style={{ ...thStyle, textAlign: 'center' }}>
-                    {label} {i + 1}
-                  </th>
-                ))}
+                {Array.from({ length: numTests }, (_, i) => {
+                  const colIdx = i + 1;
+                  const lockedArray = type === 'classtest' ? (classInfo?.lockedTests || []) : (classInfo?.lockedTerms || []);
+                  const isLocked = lockedArray.includes(colIdx);
+                  return (
+                    <th key={i} style={{ ...thStyle, textAlign: 'center', minWidth: 80 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                        <span>{label} {colIdx}</span>
+                        {isLocked ? (
+                          <span title="Locked by Admin" style={{
+                            background: '#fdecea', color: '#c0392b', padding: '2px 8px',
+                            borderRadius: 6, fontSize: '0.65rem', fontWeight: 600, cursor: 'not-allowed'
+                          }}>Edit Locked</span>
+                        ) : editIndex === colIdx ? (
+                          <span style={{
+                            background: '#fff8e1', color: '#c67c00', padding: '2px 8px',
+                            borderRadius: 6, fontSize: '0.65rem', fontWeight: 600
+                          }}>Editing</span>
+                        ) : editIndex === null ? (
+                          <button onClick={() => handleEdit(colIdx)} style={{
+                            background: '#434343', border: 'none', borderRadius: 6,
+                            padding: '4px 12px', fontSize: '0.72rem', cursor: 'pointer',
+                            color: 'white', fontFamily: 'Poppins', fontWeight: 600,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.15)'
+                          }}>Edit</button>
+                        ) : (
+                          <div style={{ height: 21 }}></div>
+                        )}
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
@@ -245,14 +246,15 @@ export default function MarksTable({ students, classId, type }) {
                   <td style={{ ...tdStyle, fontWeight: 500 }}>{s.name}</td>
                   {Array.from({ length: numTests }, (_, i) => {
                     const key = `${s._id}_${i + 1}`;
-                    const displayVal = editMode
+                    const isColEditing = editIndex === (i + 1);
+                    const displayVal = isColEditing
                       ? (draftMarks[key] !== undefined ? draftMarks[key] : (marks[key] ?? ''))
                       : (marks[key] ?? '');
 
                     // Colour code the score chip
                     const scoreNum = Number(displayVal);
                     let chipStyle = {};
-                    if (!editMode && displayVal !== '' && displayVal !== null) {
+                    if (!isColEditing && displayVal !== '' && displayVal !== null) {
                       if (scoreNum >= 80) chipStyle = { background: '#e6f9ee', color: '#1a8a3c' };
                       else if (scoreNum >= 60) chipStyle = { background: '#fff8e1', color: '#c67c00' };
                       else chipStyle = { background: '#fdecea', color: '#c0392b' };
@@ -260,7 +262,7 @@ export default function MarksTable({ students, classId, type }) {
 
                     return (
                       <td key={i} style={{ ...tdStyle, textAlign: 'center' }}>
-                        {editMode ? (
+                        {isColEditing ? (
                           <input
                             type="number" min="0" max="100"
                             value={draftMarks[key] !== undefined ? draftMarks[key] : (marks[key] ?? '')}

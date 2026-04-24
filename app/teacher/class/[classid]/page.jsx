@@ -7,7 +7,6 @@ import AttendanceTable from '@/components/AttendanceTable';
 import PageLoader from '@/components/PageLoader';
 import BackButton from '@/components/BackButton';
 
-const TABS = ['Class Tests', 'Exams', 'Attendance', 'Notes'];
 
 function ClassPageInner() {
   const params = useParams();
@@ -40,6 +39,13 @@ function ClassPageInner() {
   };
 
   if (loading) return <PageLoader message="Loading class" />;
+
+  const availableTabs = [
+    { id: 0, label: 'Class Tests' },
+    { id: 1, label: 'Exams' },
+    ...(classInfo?.enableAttendance !== false ? [{ id: 2, label: 'Attendance' }] : []),
+    { id: 3, label: 'Notes' },
+  ];
 
   return (
     <>
@@ -88,16 +94,16 @@ function ClassPageInner() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem', overflowX: 'auto', paddingBottom: 4 }}>
-          {TABS.map((tab, i) => (
-            <button key={tab} onClick={() => setActiveTab(i)} style={{
+          {availableTabs.map((tab) => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
               padding: '0.5rem 1.1rem', borderRadius: 20,
-              background: activeTab === i ? 'var(--sky)' : 'white',
-              color: 'var(--charcoal)',
-              fontFamily: 'Poppins', fontWeight: activeTab === i ? 600 : 400,
+              background: activeTab === tab.id ? 'var(--sky)' : 'white',
+              color: activeTab === tab.id ? 'white' : 'var(--charcoal)',
+              fontFamily: 'Poppins', fontWeight: activeTab === tab.id ? 600 : 400,
               fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap',
-              border: `1.5px solid ${activeTab === i ? 'var(--sky)' : 'var(--sky-light)'}`,
+              border: `1.5px solid ${activeTab === tab.id ? 'var(--sky)' : 'var(--sky-light)'}`,
               transition: 'all 0.15s',
-            }}>{tab}</button>
+            }}>{tab.label}</button>
           ))}
         </div>
 
@@ -117,13 +123,13 @@ function ClassPageInner() {
         {/* Tab content */}
         {activeTab === 0 && (
           isCtView
-            ? <MarksViewer students={students} classId={classId} type="classtest" />
-            : <MarksTable students={students} classId={classId} type="classtest" />
+            ? <MarksViewer students={students} classId={classId} type="classtest" classInfo={classInfo} />
+            : <MarksTable students={students} classId={classId} type="classtest" classInfo={classInfo} />
         )}
         {activeTab === 1 && (
           isCtView
-            ? <MarksViewer students={students} classId={classId} type="exam" />
-            : <MarksTable students={students} classId={classId} type="exam" />
+            ? <MarksViewer students={students} classId={classId} type="exam" classInfo={classInfo} />
+            : <MarksTable students={students} classId={classId} type="exam" classInfo={classInfo} />
         )}
         {activeTab === 2 && (
           <AttendanceTable students={students} classId={classId} readOnly={isCtView} />

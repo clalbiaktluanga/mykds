@@ -9,6 +9,11 @@ const ClassSchema = new mongoose.Schema({
   subject: { type: String, required: true },
   teacher: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   academicYear: { type: String, default: '2024-25' },
+  terms: { type: Number, default: 3 },
+  tests: { type: Number, default: 5 },
+  enableAttendance: { type: Boolean, default: true },
+  lockedTests: [{ type: Number }],
+  lockedTerms: [{ type: Number }],
 }, { timestamps: true });
 
 export default mongoose.model('Class', ClassSchema);

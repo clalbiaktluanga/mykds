@@ -15,17 +15,6 @@ export default function PageLoader({ message = 'Loading...' }) {
           gap: 1rem;
           animation: kds-fade-in 0.3s ease both;
         }
-        .kds-loader-icon {
-          width: 56px; height: 56px; border-radius: 16px;
-          background: var(--sky-light, #d2e3fc);
-          display: flex; align-items: center;
-          justify-content: center; font-size: 26px;
-          animation: kds-pulse 1.8s ease-in-out infinite;
-        }
-        @keyframes kds-pulse {
-          0%, 100% { transform: scale(1);   opacity: 1; }
-          50%       { transform: scale(1.08); opacity: 0.75; }
-        }
         .kds-loader-msg {
           font-family: 'Poppins', sans-serif;
           font-size: 0.88rem; font-weight: 500;
@@ -44,7 +33,6 @@ export default function PageLoader({ message = 'Loading...' }) {
         }
       `}</style>
       <div className="kds-page-loader">
-        <div className="kds-loader-icon">🎒</div>
         <Spinner size={32} />
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <span className="kds-loader-msg">{message}</span>

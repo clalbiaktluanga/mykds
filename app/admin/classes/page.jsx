@@ -6,8 +6,8 @@ const CLASS_NAMES = ['KG I', 'KG II', 'Class I', 'Class II', 'Class III', 'Class
   'Class VI', 'Class VII', 'Class VIII', 'Class IX', 'Class X'];
 const SECTIONS = ['A', 'B', 'C'];
 const SUBJECTS = ['English', 'Mizo', 'Hindi', 'Mathematics', 'Science', 'Social Science', 'EVS',
-  'IT', 'Moral Values', 'Art', 'Music'];
-const EMPTY = { name: 'Class VIII', section: 'A', subject: 'English', academicYear: '2026' };
+  'Information Technology', 'Moral Values', 'General Knowledge', 'Spelling & Dictations'];
+const EMPTY = { name: 'Class VIII', section: 'A', subject: 'English', academicYear: '2026', terms: 3, tests: 5, enableAttendance: true };
 
 export default function AdminClassesPage() {
   const [classes, setClasses] = useState([]);
@@ -19,6 +19,9 @@ export default function AdminClassesPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [search, setSearch] = useState('');
+  const [showLocksModal, setShowLocksModal] = useState(false);
+  const [lockingClass, setLockingClass] = useState(null);
+  const [locksForm, setLocksForm] = useState({ lockedTests: [], lockedTerms: [] });
 
   const fetchClasses = () =>
     fetch('/api/admin/classes').then(r => r.json()).then(data => {
@@ -31,7 +34,7 @@ export default function AdminClassesPage() {
   const openAdd = () => { setEditing(null); setForm(EMPTY); setError(''); setShowModal(true); };
   const openEdit = (c) => {
     setEditing(c);
-    setForm({ name: c.name, section: c.section, subject: c.subject, academicYear: c.academicYear });
+    setForm({ name: c.name, section: c.section, subject: c.subject, academicYear: c.academicYear, terms: c.terms || 3, tests: c.tests || 5, enableAttendance: c.enableAttendance !== undefined ? c.enableAttendance : true });
     setError(''); setShowModal(true);
   };
 
@@ -53,6 +56,34 @@ export default function AdminClassesPage() {
     await fetchClasses(); setDeleteConfirm(null);
   };
 
+  const openLocks = (c) => {
+    setLockingClass(c);
+    setLocksForm({
+      lockedTests: c.lockedTests || [],
+      lockedTerms: c.lockedTerms || []
+    });
+    setShowLocksModal(true);
+  };
+
+  const handleSaveLocks = async () => {
+    setLoading(true); setError('');
+    const res = await fetch(`/api/admin/classes/${lockingClass._id}`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lockedTests: locksForm.lockedTests, lockedTerms: locksForm.lockedTerms }),
+    });
+    const data = await res.json();
+    if (!res.ok) { setError(data.error || 'Error'); setLoading(false); return; }
+    await fetchClasses(); setShowLocksModal(false); setLoading(false);
+  };
+
+  const toggleLock = (type, index) => {
+    setLocksForm(prev => {
+      const arr = prev[type] || [];
+      const newArr = arr.includes(index) ? arr.filter(i => i !== index) : [...arr, index];
+      return { ...prev, [type]: newArr };
+    });
+  };
+
   const inputStyle = {
     width: '100%', padding: '0.65rem 0.9rem', borderRadius: 10,
     border: '1.5px solid var(--sky-light)', fontFamily: 'Poppins',
@@ -61,12 +92,12 @@ export default function AdminClassesPage() {
 
   const subjectIcons = {
     'English': '📖', 'Mizo': '📝', 'Hindi': '📝', 'Mathematics': '🔢', 'Science': '🔬',
-    'Social Science': '🌍', 'EVS': '🌍', 'IT': '💻', 'Moral Values': '🙏', 'Art': '🎨', 'Music': '🎵'
+    'Social Science': '🌍', 'EVS': '🌍', 'IT': '💻', 'Moral Values': '🙏', 'GK': '🧠', 'S & D': '🗣️'
   };
 
-  const filteredClasses = classes.filter(cls => 
+  const filteredClasses = classes.filter(cls =>
     cls.name.toLowerCase().includes(search.toLowerCase()) ||
-    cls.subject.toLowerCase().includes(search.toLowerCase()) || 
+    cls.subject.toLowerCase().includes(search.toLowerCase()) ||
     cls.section.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -88,7 +119,7 @@ export default function AdminClassesPage() {
         <button onClick={openAdd} style={{
           background: 'var(--sky)', border: 'none', borderRadius: 10,
           padding: '0.6rem 1.2rem', fontFamily: 'Poppins', fontWeight: 600,
-          fontSize: '0.85rem', cursor: 'pointer',
+          fontSize: '0.85rem', cursor: 'pointer', color: 'white'
         }}>+ Add Class</button>
       </div>
 
@@ -167,6 +198,12 @@ export default function AdminClassesPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '0.4rem' }}>
+              <button onClick={() => openLocks(cls)} style={{
+                padding: '4px 12px', borderRadius: 7,
+                border: '1.5px solid var(--sky-light)',
+                background: 'white', fontFamily: 'Poppins',
+                fontSize: '0.78rem', cursor: 'pointer',
+              }}>Edit Lock</button>
               <button onClick={() => openEdit(cls)} style={{
                 padding: '4px 12px', borderRadius: 7,
                 border: '1.5px solid var(--sky-light)',
@@ -232,6 +269,29 @@ export default function AdminClassesPage() {
                   value={form.academicYear}
                   onChange={e => setForm({ ...form, academicYear: e.target.value })} />
               </div>
+              <div style={{ display: 'flex', gap: '0.6rem' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Number of Tests</label>
+                  <input style={inputStyle} type="number" min="1" max="20"
+                    value={form.tests !== undefined ? form.tests : 5}
+                    onChange={e => setForm({ ...form, tests: Number(e.target.value) })} />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 600 }}>Number of Terms</label>
+                  <input style={inputStyle} type="number" min="1" max="10"
+                    value={form.terms !== undefined ? form.terms : 3}
+                    onChange={e => setForm({ ...form, terms: Number(e.target.value) })} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.3rem' }}>
+                <input type="checkbox" id="enableAttendance"
+                  checked={form.enableAttendance}
+                  onChange={e => setForm({ ...form, enableAttendance: e.target.checked })}
+                  style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                <label htmlFor="enableAttendance" style={{ fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' }}>
+                  Enable Attendance Management
+                </label>
+              </div>
             </div>
             {error && <p style={{
               color: '#c0392b', fontSize: '0.78rem',
@@ -247,7 +307,7 @@ export default function AdminClassesPage() {
               <button onClick={handleSubmit} disabled={loading} style={{
                 flex: 2, padding: '0.7rem', borderRadius: 10,
                 background: 'var(--sky)', border: 'none', fontFamily: 'Poppins',
-                fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer',
+                fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', color: 'white'
               }}>
                 {loading ? 'Saving...' : editing ? 'Save Changes' : 'Add Class'}
               </button>
@@ -284,6 +344,86 @@ export default function AdminClassesPage() {
                 background: '#c0392b', border: 'none', color: 'white',
                 fontFamily: 'Poppins', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
               }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Locks Modal */}
+      {showLocksModal && lockingClass && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 1000, padding: '1rem'
+        }}>
+          <div style={{
+            background: 'white', borderRadius: 18, padding: '2rem',
+            width: '100%', maxWidth: 450,
+            boxShadow: '0 8px 40px rgba(66,133,244,0.15)',
+            maxHeight: '90vh', overflowY: 'auto'
+          }}>
+            <h3 style={{
+              fontWeight: 700, fontSize: '1.05rem',
+              marginBottom: '0.5rem', color: 'var(--charcoal)'
+            }}>
+              Manage Edit Locks
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--charcoal-light)', marginBottom: '1.5rem' }}>
+              {lockingClass.name} Section {lockingClass.section} — {lockingClass.subject}
+              <br />Lock columns to prevent teachers from editing them.
+            </p>
+
+            <div style={{ display: 'flex', gap: '2rem' }}>
+              <div style={{ flex: 1 }}>
+                <h4 style={{ fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.8rem', color: 'var(--charcoal)' }}>Class Tests</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  {Array.from({ length: lockingClass.tests || 5 }, (_, i) => i + 1).map(testIdx => (
+                    <label key={`test-${testIdx}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="checkbox"
+                        checked={locksForm.lockedTests.includes(testIdx)}
+                        onChange={() => toggleLock('lockedTests', testIdx)}
+                        style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                      Test {testIdx}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <h4 style={{ fontSize: '0.88rem', fontWeight: 600, marginBottom: '0.8rem', color: 'var(--charcoal)' }}>Terms</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  {Array.from({ length: lockingClass.terms || 3 }, (_, i) => i + 1).map(termIdx => (
+                    <label key={`term-${termIdx}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                      <input type="checkbox"
+                        checked={locksForm.lockedTerms.includes(termIdx)}
+                        onChange={() => toggleLock('lockedTerms', termIdx)}
+                        style={{ width: 16, height: 16, cursor: 'pointer' }} />
+                      Term {termIdx}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {error && <p style={{
+              color: '#c0392b', fontSize: '0.78rem',
+              background: '#fff5f5', padding: '8px 12px',
+              borderRadius: 8, marginTop: '1rem'
+            }}>{error}</p>}
+
+            <div style={{ display: 'flex', gap: '0.7rem', marginTop: '2rem' }}>
+              <button onClick={() => setShowLocksModal(false)} style={{
+                flex: 1, padding: '0.7rem', borderRadius: 10,
+                border: '1.5px solid var(--sky-light)', background: 'white',
+                fontFamily: 'Poppins', fontSize: '0.88rem', cursor: 'pointer',
+              }}>Cancel</button>
+              <button onClick={handleSaveLocks} disabled={loading} style={{
+                flex: 2, padding: '0.7rem', borderRadius: 10,
+                background: 'var(--sky)', border: 'none', fontFamily: 'Poppins',
+                fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer', color: 'white'
+              }}>
+                {loading ? 'Saving...' : 'Save Locks'}
+              </button>
             </div>
           </div>
         </div>

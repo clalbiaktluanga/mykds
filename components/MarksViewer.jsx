@@ -1,13 +1,20 @@
 'use client';
 import { useState, useEffect } from 'react';
 
-export default function MarksViewer({ students, classId, type }) {
+export default function MarksViewer({ students, classId, type, classInfo }) {
   const [marks, setMarks] = useState({});
   const [numTests, setNumTests] = useState(3);
   const [logs, setLogs] = useState([]);
   const [showLogs, setShowLogs] = useState(false);
   const [activeLogIndex, setActiveLogIndex] = useState(null);
   const label = type === 'classtest' ? 'Test' : 'Term';
+
+  useEffect(() => {
+    if (classInfo) {
+      if (type === 'classtest') setNumTests(classInfo.tests || 5);
+      else setNumTests(classInfo.terms || 3);
+    }
+  }, [classInfo, type]);
 
   useEffect(() => {
     if (!classId) return;
@@ -64,17 +71,6 @@ export default function MarksViewer({ students, classId, type }) {
               padding: '3px 10px', borderRadius: 20,
               border: '1px solid var(--sky-light)',
             }}>👁 View Only</span>
-          </div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--charcoal-light)' }}>Columns:</span>
-            {[3, 5, 8].map(n => (
-              <button key={n} onClick={() => setNumTests(n)} style={{
-                padding: '2px 10px', borderRadius: 20,
-                border: '1.5px solid var(--sky)',
-                background: numTests === n ? 'var(--sky)' : 'white',
-                fontFamily: 'Poppins', fontSize: '0.75rem', cursor: 'pointer',
-              }}>{n}</button>
-            ))}
           </div>
         </div>
 
