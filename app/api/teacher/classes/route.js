@@ -1,7 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Class from '@/models/Class';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
 export async function GET() {

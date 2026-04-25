@@ -1,5 +1,7 @@
+export const dynamic = 'force-dynamic';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Class from '@/models/Class';
 import bcrypt from 'bcryptjs';
 

@@ -1,8 +1,9 @@
+export const dynamic = 'force-dynamic';
 import { connectDB } from '@/lib/mongodb';
 import User from '@/models/User';
 import Student from '@/models/Student';
 import Setting from '@/models/Settings';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
 export async function GET() {

@@ -1,8 +1,10 @@
+export const dynamic = 'force-dynamic';
 import { connectDB } from '@/lib/mongodb';
 import Mark from '@/models/Mark';
 import MarksLog from '@/models/MarksLog';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import Student from '@/models/Student';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 
 export async function GET(req) {

@@ -1,10 +1,11 @@
+export const dynamic = 'force-dynamic';
 import { connectDB } from '@/lib/mongodb';
 import Class from '@/models/Class';
 import Student from '@/models/Student';
 import Mark from '@/models/Mark';
 import User from '@/models/User';
 import Setting from '@/models/Settings';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { sortClassesBySubject } from '@/lib/subjects';
 
